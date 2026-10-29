@@ -32,6 +32,39 @@ def click(window, item):
 
 
 class PresentationTests(unittest.TestCase):
+    def test_every_workspace_keeps_its_content_out_of_the_status_footer(self):
+        fixture = application.ApplicationTests()
+        fixture.setUp()
+        engine = QQmlApplicationEngine()
+        engine.setInitialProperties({"controller": fixture.controller})
+        engine.load(QUrl.fromLocalFile(str(QML / "Main.qml")))
+        window = engine.rootObjects()[0]
+        try:
+            tabs = window.findChild(QObject, "workspaceTabs")
+            panel = window.findChild(QQuickItem, "feedbackPanel")
+            for width, height in ((1280, 820), (840, 640)):
+                window.setWidth(width)
+                window.setHeight(height)
+                for index in range(3):
+                    tabs.setProperty("currentIndex", index)
+                    QTest.qWait(30)
+                    point = panel.mapToScene(QPointF(10, 10))
+                    expected = panel.property("background").property("color")
+                    image = window.grabWindow()
+                    scale = image.devicePixelRatio()
+                    self.assertEqual(
+                        image.pixelColor(
+                            round(point.x() * scale), round(point.y() * scale)
+                        ),
+                        expected,
+                    )
+            self.assertEqual(fixture.client.requests, [])
+        finally:
+            window.close()
+            engine.deleteLater()
+            APP.processEvents()
+            fixture.tearDown()
+
     def test_source_picker_opens_without_writes_and_uses_verified_membership(self):
         fixture = application.ApplicationTests()
         fixture.setUp()

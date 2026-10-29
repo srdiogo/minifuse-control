@@ -56,6 +56,9 @@ ApplicationWindow {
             NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Device and desktop") }
         }
         StackLayout {
+            objectName: "workspacePages"
+            clip: true
+            Layout.minimumHeight: 0
             Layout.fillWidth: true
             Layout.fillHeight: true
             currentIndex: tabs.currentIndex
