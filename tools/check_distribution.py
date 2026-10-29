@@ -23,6 +23,10 @@ def main():
             "qml/Main.qml",
             "qml/InputControls.qml",
             "qml/SignalMeter.qml",
+            "qml/StateButton.qml",
+            "qml/NavigationTab.qml",
+            "qml/Panel.qml",
+            "qml/DevicePage.qml",
             "assets/minifuse-control.svg",
         ):
             assert "minifuse_control/" + suffix in names

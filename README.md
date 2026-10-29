@@ -22,6 +22,12 @@ python3 -m venv .venv
 .venv/bin/minifuse-control
 ```
 
+The mixer uses aligned vertical channel strips, a separate master and compact
+input-mode buttons, sharing a visual language with the optional Omarchy panel.
+Colors follow the system Qt palette. Short windows use a compact layout; source
+channels scroll horizontally while the master remains visible. Mix sources are
+managed from **Mix sources…**, and routes remain beside the destination heading.
+
 The application reads state on connection and follows service events. Faders
 and pan apply while moving, with bounded coalescing and a final release value.
 Numeric levels apply on Enter; mute/solo, routes and membership apply on click.

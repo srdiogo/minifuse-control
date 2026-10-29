@@ -85,3 +85,11 @@ The wheel and source distribution build locally. A temporary clean virtual
 environment installs/removes the wheel, verifies bundled QML/icon resources and
 imports/runs the agent help without PySide6. This is package construction
 coverage, not a clean-machine GUI or graphical-session acceptance claim.
+
+
+The mixer presentation refresh adds offscreen checks for fully visible master
+tracks and numeric entries at the minimum window size, mute/solo styling while
+pointer or keyboard focus remains on the button, and numeric readback updates
+after editing/reset. Existing alignment, continuous-gesture, switch capability,
+theme-without-mutation and recovery tests also cover the new layout. Light and
+dark palette renders are reviewed separately from hardware-backed validation.
