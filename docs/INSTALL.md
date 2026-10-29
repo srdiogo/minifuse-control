@@ -108,3 +108,9 @@ and the agent import, checks resources, then uninstalls it. The wheel is the
 portable Python distribution; Linux Qt dependencies and the service/module are
 separate. Native package construction is tested on Arch rather than implied by
 an Ubuntu-built Python wheel.
+
+Native Arch packages target the Python minor version used to build them, because
+their modules live in that interpreter's site-packages directory. Rebuild them
+for another Python minor version; source/virtual-environment installation still
+supports the range declared above. Do not force dependency checks to reuse an
+incompatible package.
