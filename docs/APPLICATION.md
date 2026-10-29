@@ -108,5 +108,11 @@ Support keyboard focus/activation, readable labels and values, accessible names
 for mute/solo/pan/faders, numeric editing, contrast beyond color-only state,
 HiDPI/fractional scaling and reduced-motion preferences. Test both light/dark
 palettes. Theme changes must not reset model state or trigger operations.
+Keep feedback in a fixed-height status area so changing operation messages
+never moves an active control. Long messages remain readable by scrolling.
+The normal application inherits the session Qt style/platform theme and palette,
+including selection colors; it does not force a test style or fixed accent.
+Explicit headless test settings are confined to tests and CI.
+
 Generic QML controls can later share design tokens with the plugin; host-only
 Omarchy imports remain in the plugin repository.

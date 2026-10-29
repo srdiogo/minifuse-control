@@ -11,8 +11,6 @@ ApplicationWindow {
     visible: true
     title: qsTr("MiniFuse Control")
     color: palette.window
-    palette.highlight: "#167d70"
-    palette.highlightedText: "white"
     required property var controller
 
     ColumnLayout {
@@ -29,16 +27,36 @@ ApplicationWindow {
             Button { text: qsTr("Start service"); visible: !window.controller.online; onClicked: window.controller.startService() }
         }
         Frame {
+            objectName: "feedbackPanel"
             Layout.fillWidth: true
-            visible: window.controller.message.length > 0
+            Layout.minimumHeight: 64
+            Layout.preferredHeight: 64
+            Layout.maximumHeight: 64
             RowLayout {
                 anchors.fill: parent
-                Label { text: window.controller.message; wrapMode: Text.Wrap; Layout.fillWidth: true; Accessible.role: Accessible.AlertMessage }
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    contentWidth: availableWidth
+                    TextArea {
+                        objectName: "feedbackText"
+                        text: window.controller.message || (window.controller.liveActive ? qsTr("Adjusting…") : window.controller.busy ? qsTr("Waiting for device verification…") : window.controller.canWrite ? qsTr("Ready") : window.controller.status)
+                        readOnly: true
+                        selectByMouse: true
+                        wrapMode: TextEdit.Wrap
+                        background: null
+                        padding: 0
+                        Accessible.role: Accessible.StatusBar
+                        Accessible.name: text
+                    }
+                }
                 Button { text: qsTr("Refresh and acknowledge"); visible: window.controller.uncertain; enabled: window.controller.online && window.controller.mixes.length > 0; onClicked: window.controller.acknowledge() }
             }
         }
         TabBar {
             id: tabs
+            objectName: "workspaceTabs"
             Layout.preferredWidth: 530
             TabButton { text: qsTr("Mixer and routing") }
             TabButton { text: qsTr("Presets") }

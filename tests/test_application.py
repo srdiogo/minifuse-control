@@ -13,7 +13,7 @@ os.environ.setdefault("QT_QUICK_BACKEND", "software")
 
 from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtGui import QGuiApplication, QPalette, QColor
-from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQml import QQmlApplicationEngine, QQmlExpression
 from PySide6.QtQuick import QQuickWindow
 from PySide6.QtTest import QTest
 from minifuse_control.controller import Controller
@@ -100,12 +100,69 @@ class ApplicationTests(unittest.TestCase):
         QTest.qWait(30)
         self.assertEqual(self.client.requests, [])
         self.controller.changed.emit()
-        palette = QPalette(APP.palette())
-        palette.setColor(QPalette.Window, QColor("#17252e"))
-        APP.setPalette(palette)
-        APP.processEvents()
+        original = QPalette(APP.palette())
+        try:
+            for background, foreground, accent in (
+                ("#17252e", "#e3f1f8", "#e8a442"),
+                ("#f2f5f7", "#17252e", "#254b92"),
+            ):
+                palette = QPalette(original)
+                palette.setColor(QPalette.Window, QColor(background))
+                palette.setColor(QPalette.WindowText, QColor(foreground))
+                palette.setColor(QPalette.Highlight, QColor(accent))
+                APP.setPalette(palette)
+                QTest.qWait(10)
+                self.assertEqual(window.property("color"), QColor(background))
+                for expression, expected in (
+                    ("palette.windowText", foreground),
+                    ("palette.highlight", accent),
+                ):
+                    actual, _ = QQmlExpression(
+                        engine.rootContext(), window, expression
+                    ).evaluate()
+                    self.assertEqual(actual, QColor(expected))
+                self.assertEqual(self.client.requests, [])
+                self.assertFalse(window.grabWindow().isNull())
+        finally:
+            APP.setPalette(original)
+            window.close()
+            engine.deleteLater()
+            APP.processEvents()
+
+    def test_feedback_never_moves_the_controls_between_gestures(self):
+        engine = QQmlApplicationEngine()
+        engine.setInitialProperties({"controller": self.controller})
+        engine.load(QUrl.fromLocalFile(str(ROOT / "src/minifuse_control/qml/Main.qml")))
+        window: QQuickWindow = engine.rootObjects()[0]
+        QTest.qWait(20)
+        tabs = window.findChild(QObject, "workspaceTabs")
+        panel = window.findChild(QObject, "feedbackPanel")
+        feedback = window.findChild(QObject, "feedbackText")
+        master = window.findChild(QObject, "masterControl")
+        from PySide6.QtCore import QPointF
+
+        def position():
+            point = master.mapToScene(QPointF(0, 0))
+            return (tabs.property("y"), point.y(), panel.property("height"))
+
+        baseline = position()
+        for message in (
+            "Device readback verified",
+            "",
+            "A long device error requiring review and reconciliation. " * 12,
+        ):
+            self.controller._message = message
+            self.controller.changed.emit()
+            QTest.qWait(20)
+            self.assertEqual(position(), baseline)
+            self.assertTrue(feedback.property("text"))
+        self.controller._pending = {"key": "unknown"}
+        self.controller._busy = False
+        self.controller.changed.emit()
+        QTest.qWait(20)
+        self.assertEqual(position(), baseline)
         self.assertEqual(self.client.requests, [])
-        self.assertFalse(window.grabWindow().isNull())
+        self.controller._pending = None
         window.close()
         engine.deleteLater()
         APP.processEvents()
