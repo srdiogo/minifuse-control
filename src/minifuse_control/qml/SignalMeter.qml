@@ -17,7 +17,7 @@ Control {
     Accessible.name: channelName + " peak · " + readout
     ToolTip.visible: hovered
     ToolTip.text: channelName + " peak · " + readout + qsTr(" · Scale −96 to 0 dBFS")
-    background: Rectangle { color: root.palette.base; border.color: root.palette.mid; radius: 2 }
+    background: Rectangle { color: Qt.alpha(root.palette.windowText, 0.04); border.color: Qt.alpha(root.palette.windowText, 0.16); radius: 2 }
     contentItem: Item {
         Rectangle {
             anchors.left: parent.left
@@ -27,6 +27,6 @@ Control {
             color: root.palette.highlight
             radius: 1
         }
-        Rectangle { width: parent.width; height: 1; y: parent.height / 2; color: root.palette.mid }
+        Rectangle { width: parent.width; height: 1; y: parent.height / 2; color: Qt.alpha(root.palette.windowText, 0.15) }
     }
 }

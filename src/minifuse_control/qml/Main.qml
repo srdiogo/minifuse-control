@@ -12,28 +12,79 @@ ApplicationWindow {
     title: qsTr("MiniFuse Control")
     color: palette.window
     required property var controller
+    readonly property bool compact: height < 740
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 22
-        spacing: 16
+        anchors.margins: window.compact ? 12 : 20
+        spacing: window.compact ? 8 : 14
         RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: window.compact ? 36 : 50
+            spacing: 16
             ColumnLayout {
-                Label { text: qsTr("MINIFUSE CONTROL"); font.pixelSize: 23; font.bold: true; font.letterSpacing: 2 }
-                Label { text: window.controller.status; opacity: 0.75; Accessible.role: Accessible.StatusBar }
+                spacing: 0
+                Label { text: qsTr("MiniFuse"); font.pixelSize: window.compact ? 22 : 26; font.bold: true }
+                Label { text: qsTr("CONTROL CENTER"); visible: !window.compact; font.pixelSize: 10; font.letterSpacing: 2; opacity: 0.55 }
             }
             Item { Layout.fillWidth: true }
-            BusyIndicator { running: window.controller.busy; visible: running; Layout.preferredWidth: 32; Layout.preferredHeight: 32 }
+            Rectangle {
+                Layout.preferredWidth: 6
+                Layout.preferredHeight: 6
+                radius: 3
+                color: window.controller.canWrite ? window.palette.highlight : window.palette.mid
+            }
+            Label {
+                text: window.controller.status
+                font.pixelSize: 12
+                opacity: 0.75
+                Layout.maximumWidth: 350
+                elide: Text.ElideRight
+                Accessible.role: Accessible.StatusBar
+            }
             Button { text: qsTr("Start service"); visible: !window.controller.online; onClicked: window.controller.startService() }
         }
-        Frame {
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Qt.alpha(window.palette.windowText, 0.12) }
+        TabBar {
+            id: tabs
+            objectName: "workspaceTabs"
+            Layout.preferredWidth: 470
+            spacing: 4
+            background: null
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Mixer and routing") }
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Presets") }
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Device and desktop") }
+        }
+        StackLayout {
+            objectName: "workspacePages"
+            clip: true
+            Layout.minimumHeight: 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            currentIndex: tabs.currentIndex
+            MixerPage { controller: window.controller; compact: window.compact }
+            PresetsPage { controller: window.controller }
+            DevicePage { controller: window.controller }
+        }
+        Panel {
             objectName: "feedbackPanel"
             Layout.fillWidth: true
-            Layout.minimumHeight: 64
-            Layout.preferredHeight: 64
-            Layout.maximumHeight: 64
+            Layout.minimumHeight: window.compact ? 42 : 54
+            Layout.preferredHeight: window.compact ? 42 : 54
+            Layout.maximumHeight: window.compact ? 42 : 54
+            padding: window.compact ? 6 : 10
             RowLayout {
                 anchors.fill: parent
+                spacing: 12
+                Label {
+                    text: window.controller.uncertain ? qsTr("REVIEW") : window.controller.liveActive ? qsTr("ADJUSTING") : window.controller.busy ? qsTr("VERIFYING") : qsTr("STATUS")
+                    font.pixelSize: 10
+                    font.bold: true
+                    font.letterSpacing: 1
+                    color: window.controller.uncertain ? window.palette.highlight : window.palette.windowText
+                    opacity: 0.65
+                    Layout.preferredWidth: 82
+                }
                 ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -41,53 +92,18 @@ ApplicationWindow {
                     contentWidth: availableWidth
                     TextArea {
                         objectName: "feedbackText"
-                        text: window.controller.message || (window.controller.liveActive ? qsTr("Adjusting…") : window.controller.busy ? qsTr("Waiting for device verification…") : window.controller.canWrite ? qsTr("Ready") : window.controller.status)
+                        text: window.controller.message || (window.controller.liveActive ? qsTr("Adjusting…") : window.controller.busy ? qsTr("Waiting for device verification…") : window.controller.canWrite ? qsTr("Ready · Changes apply automatically") : window.controller.status)
                         readOnly: true
                         selectByMouse: true
                         wrapMode: TextEdit.Wrap
                         background: null
                         padding: 0
+                        font.pixelSize: 12
                         Accessible.role: Accessible.StatusBar
                         Accessible.name: text
                     }
                 }
                 Button { text: qsTr("Refresh and acknowledge"); visible: window.controller.uncertain; enabled: window.controller.online && window.controller.mixes.length > 0; onClicked: window.controller.acknowledge() }
-            }
-        }
-        TabBar {
-            id: tabs
-            objectName: "workspaceTabs"
-            Layout.preferredWidth: 530
-            TabButton { text: qsTr("Mixer and routing") }
-            TabButton { text: qsTr("Presets") }
-            TabButton { text: qsTr("Device and desktop") }
-        }
-        StackLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            currentIndex: tabs.currentIndex
-            MixerPage { controller: window.controller }
-            PresetsPage { controller: window.controller }
-            ScrollView {
-                ColumnLayout {
-                    width: parent.width
-                    spacing: 18
-                    Label { text: qsTr("Device capabilities"); font.pixelSize: 24; font.bold: true }
-                    Label { text: qsTr("MiniFuse 4 mixer, routes and host snapshots are available with the matching service/module. MiniFuse 1/2 retain their established CLI toggles."); wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    Label { text: qsTr("MiniFuse 4 INST1, INST2 and shared +48 V follow confirmed device state. Input writes and signal meters require matching module features. Mix meters follow master gain, before output routing; USB direct can bypass that mix. Logo-button events remain unavailable. Input trims are read-only."); wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    Label { text: qsTr("Physical-button activation target"); font.bold: true }
-                    ComboBox {
-                        model: [qsTr("Disabled"), qsTr("Application"), qsTr("Omarchy panel")]
-                        property var targets: ["disabled", "application", "omarchy_panel"]
-                        currentIndex: targets.indexOf(window.controller.activationTarget)
-                        Accessible.name: qsTr("Physical-button activation preference")
-                        onActivated: window.controller.setActivationTarget(targets[currentIndex])
-                    }
-                    Label { text: qsTr("The optional agent requires a validated backend event and explicit session startup. Setting a preference does not enable unsupported hardware events or install startup entries."); wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    CheckBox { id: diagnostics; text: qsTr("Show local diagnostics") }
-                    Button { visible: diagnostics.checked; text: qsTr("Refresh device state"); enabled: !window.controller.busy; onClicked: window.controller.refresh() }
-                    TextArea { visible: diagnostics.checked; text: window.controller.diagnostics; readOnly: true; font.family: "monospace"; Layout.fillWidth: true; Accessible.name: qsTr("Device and operation diagnostics") }
-                }
             }
         }
     }

@@ -142,3 +142,30 @@ revision unchanged. The visible Wayland application opened without runtime-log
 errors. This complements the 19 offline GUI tests under Basic and Fusion.
 Calibration and coverage limits are recorded in the core
 [meter report](https://github.com/srdiogo/mf-cli/blob/936962fcef9320fbf0e0991bd095d9c6c9370dc4/docs/mf4/meters.md).
+
+
+## Mixer presentation
+
+The standalone application shares the panel's channel-strip hierarchy without
+requiring Omarchy or Quickshell. All three destinations use the same aligned
+pan, mute/solo, configured-gain and signal-meter rows, with a separate master.
+The source bank fills the available width and scrolls horizontally when needed;
+the master stays beside it. Membership controls live in the **Mix sources…**
+popup. Routes remain visible beside the destination heading.
+
+Windows below 740 logical pixels in height use compact spacing and channel
+headers. At the minimum 840 × 640 window size the gain tracks and numeric entries
+remain visible. A fixed status footer prevents operation messages, pending
+verification and recovery actions from moving the mixer during a gesture.
+
+Mute, solo and input modes use confirmed state for their accent text, border and
+underline. Keyboard focus has its own border treatment and does not imply an
+active switch. Numeric gain fields accept a number, optionally followed by
+`dB`, on Enter; `-inf` and `−∞` represent silence. The separate silence action
+remains available. Gain readouts follow confirmed updates after editing or
+cancelling; live meter samples never change configured gain.
+
+Custom control surfaces use the current Qt palette, including the platform
+accent, and inherit the system font family. Theme changes require no hardware
+request. Presets and device settings use the same surfaces and spacing; preset
+comparison and explicit Apply behavior remain unchanged.
