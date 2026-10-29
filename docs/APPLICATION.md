@@ -132,3 +132,13 @@ Explicit headless test settings are confined to tests and CI.
 
 Generic QML controls can later share design tokens with the plugin; host-only
 Omarchy imports remain in the plugin repository.
+
+## Hardware integration observation
+
+On 29 October 2026, a real Qt client connected to the hardware-backed service
+and rendered all eight source bars plus stereo master bars for an output mix.
+The Analog 1 bar received a nonzero native peak; meter updates left configuration
+revision unchanged. The visible Wayland application opened without runtime-log
+errors. This complements the 19 offline GUI tests under Basic and Fusion.
+Calibration and coverage limits are recorded in the core
+[meter report](https://github.com/srdiogo/mf-cli/blob/936962fcef9320fbf0e0991bd095d9c6c9370dc4/docs/mf4/meters.md).
