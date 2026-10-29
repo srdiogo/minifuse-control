@@ -58,6 +58,7 @@ ApplicationWindow {
         StackLayout {
             objectName: "workspacePages"
             clip: true
+            Layout.minimumWidth: 0
             Layout.minimumHeight: 0
             Layout.fillWidth: true
             Layout.fillHeight: true
