@@ -73,7 +73,8 @@ and archive checksum. The packages have separate ownership:
 
 - `minifuse-control-common`: shared Python state/framing/preferences modules.
 - `minifuse-control`: Qt application, QML, launcher and icon; depends on the
-  common package, the compatible service and PySide6 6.11.x (tested at 6.11.2).
+  common package, the compatible service and distribution PySide6 (tested at 6.11.2; the pip extra
+  remains pinned to that version).
 - `minifuse-desktop-agent`: standard-library activation policy and optional
   user unit; depends on the common package and service, without Qt.
 

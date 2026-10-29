@@ -1,0 +1,34 @@
+pkgbase = minifuse-control
+	pkgdesc = MiniFuse Control for Linux
+	pkgver = 0.1.0.r8.g0d82e54
+	pkgrel = 1
+	url = https://github.com/srdiogo/minifuse-control
+	arch = any
+	license = MIT
+	checkdepends = pyside6>=6.11.2
+	checkdepends = desktop-file-utils
+	checkdepends = qt6-declarative
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-setuptools>=77
+	makedepends = python-wheel
+	source = minifuse-control-0d82e547879a4908578f9f1353219d3c9dc6d7a3.tar.gz::https://github.com/srdiogo/minifuse-control/archive/0d82e547879a4908578f9f1353219d3c9dc6d7a3.tar.gz
+	sha256sums = fac99e76618bc99dd93afa9209eb73f1489f22f7353260e9ee48ccbd8f1b65f0
+
+pkgname = minifuse-control-common
+	pkgdesc = Shared Python framing and preferences for MiniFuse applications
+	depends = python>=3.12
+
+pkgname = minifuse-control
+	pkgdesc = Qt Quick MiniFuse mixer, routing, input controls and signal meters
+	depends = minifuse-control-common=0.1.0.r8.g0d82e54
+	depends = mf-service>=0.1.0
+	depends = pyside6>=6.11.2
+	optdepends = qt6-wayland: native Wayland support
+
+pkgname = minifuse-desktop-agent
+	pkgdesc = Optional Qt-free MiniFuse desktop activation agent
+	depends = minifuse-control-common=0.1.0.r8.g0d82e54
+	depends = mf-service>=0.1.0
+	optdepends = libnotify: activation failure notifications
+	optdepends = minifuse-control: application activation target

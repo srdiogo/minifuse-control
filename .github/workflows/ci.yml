@@ -32,3 +32,21 @@ jobs:
         with:
           name: minifuse-control-python-preview
           path: dist/*
+
+  arch-packages:
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    steps:
+      - run: pacman -Syu --noconfirm base-devel git python-build python-installer python-setuptools python-wheel pyside6 desktop-file-utils qt6-declarative mesa
+      - uses: actions/checkout@v4
+      - name: Build split packages as an unprivileged user
+        run: |
+          useradd --create-home builder
+          install -d -o builder -g builder /tmp/package
+          cp packaging/arch/PKGBUILD /tmp/package/PKGBUILD
+          chown builder:builder /tmp/package/PKGBUILD
+          runuser -u builder -- sh -c 'cd /tmp/package && makepkg --cleanbuild --noconfirm'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: minifuse-control-arch-preview
+          path: /tmp/package/*.pkg.tar.zst

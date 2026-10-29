@@ -1,0 +1,75 @@
+# Maintainer: Diogo de Medeiros <sr.diogo@gmail.com>
+pkgbase=minifuse-control
+pkgname=('minifuse-control-common' 'minifuse-control' 'minifuse-desktop-agent')
+pkgver=0.1.0.r8.g0d82e54
+pkgrel=1
+pkgdesc='MiniFuse Control for Linux'
+arch=('any')
+url='https://github.com/srdiogo/minifuse-control'
+license=('MIT')
+makedepends=('python-build' 'python-installer' 'python-setuptools>=77' 'python-wheel')
+checkdepends=('pyside6>=6.11.2' 'desktop-file-utils' 'qt6-declarative')
+_commit=0d82e547879a4908578f9f1353219d3c9dc6d7a3
+source=("$pkgbase-$_commit.tar.gz::$url/archive/$_commit.tar.gz")
+sha256sums=('fac99e76618bc99dd93afa9209eb73f1489f22f7353260e9ee48ccbd8f1b65f0')
+
+build() {
+  cd "$pkgbase-$_commit"
+  python -m build --wheel --no-isolation
+  python -m installer --no-compile-bytecode --prefix=/usr --destdir="$srcdir/wheel-root" dist/*.whl
+}
+
+check() {
+  cd "$pkgbase-$_commit"
+  PYTHONPATH=src QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME= QT_QUICK_CONTROLS_STYLE=Fusion QT_QUICK_BACKEND=software python -m unittest discover -s tests -v
+  desktop-file-validate packaging/io.github.srdiogo.MiniFuseControl.desktop
+  /usr/lib/qt6/bin/qmllint src/minifuse_control/qml/*.qml
+}
+
+_site() {
+  python -c 'import sysconfig; print(sysconfig.get_path("purelib", vars={"base":"/usr","platbase":"/usr"}))'
+}
+
+_license() {
+  install -Dm644 "$srcdir/$pkgbase-$_commit/LICENSE" "$pkgdir/usr/share/licenses/$1/LICENSE"
+}
+
+package_minifuse-control-common() {
+  pkgdesc='Shared Python framing and preferences for MiniFuse applications'
+  depends=('python>=3.12')
+  local site="$(_site)" module
+  install -dm755 "$pkgdir$site/minifuse_control"
+  for module in __init__ preferences wire; do
+    install -m644 "$srcdir/wheel-root$site/minifuse_control/$module.py" "$pkgdir$site/minifuse_control/"
+  done
+  cp -a "$srcdir/wheel-root$site"/minifuse_control-*.dist-info "$pkgdir$site/"
+  _license minifuse-control-common
+}
+
+package_minifuse-control() {
+  pkgdesc='Qt Quick MiniFuse mixer, routing, input controls and signal meters'
+  depends=("minifuse-control-common=$pkgver" 'mf-service>=0.1.0' 'pyside6>=6.11.2')
+  optdepends=('qt6-wayland: native Wayland support')
+  local site="$(_site)" module
+  install -dm755 "$pkgdir$site/minifuse_control"
+  for module in app client controller live; do
+    install -m644 "$srcdir/wheel-root$site/minifuse_control/$module.py" "$pkgdir$site/minifuse_control/"
+  done
+  cp -a "$srcdir/wheel-root$site/minifuse_control/qml" "$pkgdir$site/minifuse_control/"
+  cp -a "$srcdir/wheel-root$site/minifuse_control/assets" "$pkgdir$site/minifuse_control/"
+  install -Dm755 "$srcdir/wheel-root/usr/bin/minifuse-control" "$pkgdir/usr/bin/minifuse-control"
+  install -Dm644 "$srcdir/$pkgbase-$_commit/packaging/io.github.srdiogo.MiniFuseControl.desktop" "$pkgdir/usr/share/applications/io.github.srdiogo.MiniFuseControl.desktop"
+  install -Dm644 "$srcdir/$pkgbase-$_commit/src/minifuse_control/assets/minifuse-control.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/io.github.srdiogo.MiniFuseControl.svg"
+  _license minifuse-control
+}
+
+package_minifuse-desktop-agent() {
+  pkgdesc='Optional Qt-free MiniFuse desktop activation agent'
+  depends=("minifuse-control-common=$pkgver" 'mf-service>=0.1.0')
+  optdepends=('libnotify: activation failure notifications' 'minifuse-control: application activation target')
+  local site="$(_site)"
+  install -Dm644 "$srcdir/wheel-root$site/minifuse_control/desktop.py" "$pkgdir$site/minifuse_control/desktop.py"
+  install -Dm755 "$srcdir/wheel-root/usr/bin/minifuse-desktop-agent" "$pkgdir/usr/bin/minifuse-desktop-agent"
+  install -Dm644 "$srcdir/$pkgbase-$_commit/packaging/minifuse-desktop-agent.service" "$pkgdir/usr/lib/systemd/user/minifuse-desktop-agent.service"
+  _license minifuse-desktop-agent
+}
