@@ -6,6 +6,7 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
     objectName: "mixerPage"
+    Layout.minimumWidth: 0
     required property var controller
     property int selected: 0
     property bool compact: false
@@ -28,11 +29,12 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 12
         ColumnLayout {
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
             spacing: 3
-            Label { text: root.destinations[root.selected]; font.pixelSize: 16; font.bold: true }
-            Label { text: qsTr("INPUTS & COMPUTER PLAYBACK"); font.pixelSize: 9; font.letterSpacing: 1; opacity: 0.5 }
+            Label { text: root.destinations[root.selected]; font.pixelSize: 16; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+            Label { text: qsTr("INPUTS & COMPUTER PLAYBACK"); font.pixelSize: 9; font.letterSpacing: 1; opacity: 0.5; Layout.fillWidth: true; elide: Text.ElideRight }
         }
-        Item { Layout.fillWidth: true }
         Button {
             id: sourcesButton
             objectName: "sourcesButton"
