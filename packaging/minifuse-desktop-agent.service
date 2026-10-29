@@ -1,0 +1,16 @@
+[Unit]
+Description=MiniFuse desktop activation policy
+After=mf-service.service
+Wants=mf-service.service
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/minifuse-desktop-agent
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+UMask=0077
+
+[Install]
+WantedBy=graphical-session.target

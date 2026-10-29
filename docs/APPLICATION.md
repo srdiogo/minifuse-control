@@ -1,24 +1,22 @@
 # Application architecture and UX specification
 
-Status: planned implementation. This document describes the complete product
-architecture rather than an installable mock or a disposable prototype.
+Status: implemented development architecture. Hardware, Wayland and packaging
+release acceptance remain open.
 
 ## Structure
 
 ```text
 src/minifuse_control/
-  app.py                   Qt application lifecycle and single instance
-  client/                  bounded socket adapter and version negotiation
-  models/                  confirmed state, capabilities and operation status
-  presentation/            view models; no USB selectors
-  desktop/                 separately packageable activation policy/agent
-qml/
-  Main.qml
-  pages/                   Mixer, Routing, Presets, Device/Diagnostics
-  components/              ChannelStrip, MasterStrip, RoutePicker, status views
-assets/                    owned icon and desktop entry sources
-tests/                     offscreen UI, contract and session tests
-packaging/                 future packaging and optional user-session units
+  app.py                   application lifecycle and single instance
+  client.py                bounded QLocalSocket adapter and negotiation
+  controller.py            confirmed state, capabilities, plans and outcomes
+  live.py                  one in-flight sample plus one latest desired value
+  preferences.py           private durable identity and preferences
+  desktop.py               standard-library activation policy/agent
+  qml/                     mixer strips, presets, device/diagnostics
+  assets/                  owned icon
+tests/                     offscreen pointer, contract and local socket tests
+packaging/                 desktop entry and optional agent user unit
 ```
 
 Keep socket I/O event-driven (`QLocalSocket` or a bounded worker adapter).
@@ -60,19 +58,26 @@ messages with recovery actions.
 | No device | Keep app usable for offline preset inspection |
 | Unsupported/ambiguous device | Explain limitation; do not choose a unit implicitly |
 | Ready | Render confirmed state and enable advertised operations |
-| Editing | Show local preview separately; no device write during initial-release drag |
-| Applying | Queue one explicit commit, show progress; prevent conflicting edits |
+| Editing | Render local motion immediately; submit bounded, verified intermediate values |
+| Applying | One sample in flight plus one replaceable latest value; prevent conflicting controls |
 | Verified | Replace preview with confirmed result; show success briefly |
 | Stale state/device | Discard invalid plan; refresh and let the user reapply deliberately |
 | Failure/uncertain outcome | Show rollback/journal outcome; block further writes pending fresh state |
 | Reconnected | Obtain fresh baseline; never apply pending edits from the old connection |
 
-Mute/solo clicks and route/membership changes are explicit commits. Faders
-commit on release; numeric edits commit on Enter or intentional focus departure
-according to one documented rule. Escape, closing, switching away or device
-removal discards uncommitted edits. Programmatic model refresh must not emit a
-write. A service event cannot overwrite an active local edit silently; flag a
-conflict and refresh/resolve it before applying.
+The application automatically reads state on connection and follows service
+events. Manual refresh belongs in diagnostics. Mute/solo clicks and
+route/membership changes are deliberate immediate commits. Faders/pan submit
+while moving, initially at most once per 80 ms and only after the prior sample
+settles. Release retains the latest value and sends a final sample. This is a
+scheduling bound, not a measured hardware latency promise.
+
+Numeric levels commit on Enter; Escape and focus loss discard numeric edits.
+Escape/closing/switching mix stops the current gesture without undoing already
+confirmed changes or applying unsent motion. Programmatic refresh, layout and
+theme changes never emit writes. Own verified state events update the baseline
+without resetting the active pointer preview; an external change ends the old
+gesture. Other mutations remain disabled until settlement/reconciliation.
 
 A timeout is not proof of failure or permission to repeat a write. Query the
 operation identity, surface an indeterminate result if necessary and refresh.

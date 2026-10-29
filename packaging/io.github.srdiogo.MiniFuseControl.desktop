@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=MiniFuse Control
+Comment=MiniFuse mixer, routing and host presets
+Exec=minifuse-control
+Icon=io.github.srdiogo.MiniFuseControl
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;
+StartupNotify=true

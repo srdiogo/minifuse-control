@@ -6,7 +6,7 @@
    typed client/view models and contract tests before wiring controls.
 2. Implement service availability, capability-driven device selection and
    offline preset inspection, then the three full mixer views.
-3. Implement pending-edit/commit workflows, routes, membership and verified
+3. Implement continuous-control workflows, routes, membership and verified
    outcomes. Reuse the existing MiniFuse CC interaction scenarios.
 4. Add preset comparison/restore preview, explicit Apply and content export.
 5. Complete accessible keyboard use, scalable layouts and theme behavior.
@@ -14,8 +14,8 @@
 7. Validate final builds with the real service and hardware; package the app
    and optional integration separately.
 
-There is currently no executable or dependency manifest because implementation
-has not begun. Do not ship a fake device backend as normal application behavior.
+The application, standard-library agent, Python packaging metadata, desktop
+entry, optional unit and CI definition are implemented. Do not ship a fake device backend as normal application behavior.
 Deterministic simulated services are test fixtures only.
 
 ## Automated gates
@@ -23,7 +23,8 @@ Deterministic simulated services are test fixtures only.
 - Run canonical protocol fixtures, including unsupported API, fragmented
   messages, errors, stale generation/revision and operation-status recovery.
 - Offscreen Qt tests prove that setting/refreshing controls does not commit;
-  dragging previews only and release commits once with the final value.
+  dragging sends intermediate values through one bounded gesture and release
+  preserves the latest final value without a backlog.
 - Mute/solo changes preserve gains; membership shows pair/mute/solo effects;
   route warnings follow confirmed capability/state, not tab selection.
 - Unknown/silent levels are distinct from 0 dB. Unsupported models/topologies
@@ -60,3 +61,23 @@ release claims without their own implementation and validation.
 Document dependencies, service/API compatibility, package installation/update/
 removal, optional startup and troubleshooting. The application must not install
 or replace kernel modules, udev rules or host audio routing on launch.
+
+## Current software coverage
+
+The test suite covers real pointer movement, offscreen construction/rendering,
+refresh/theme updates without writes, coalescing during delayed confirmation,
+final release, external-change cancellation, disconnect without replay,
+plan/apply identity persistence, indeterminate outcomes, preset preview expiry,
+strict framing and a real QLocalSocket peer. A separate-process test verifies
+single-instance activation. Agent tests cover validated capability/generation,
+one target, deduplication and no activation from baselines.
+
+Local validation uses Python 3.14.7, PySide6 6.11.2 and Qt 6.11.2. CI declares
+Python 3.12/3.14; a declared job is not a claim that hosted CI has run. No
+production service/module, session startup or global desktop setting is changed
+by these tests. The installed service and real hardware still need acceptance.
+
+The wheel and source distribution build locally. A temporary clean virtual
+environment installs/removes the wheel, verifies bundled QML/icon resources and
+imports/runs the agent help without PySide6. This is package construction
+coverage, not a clean-machine GUI or graphical-session acceptance claim.

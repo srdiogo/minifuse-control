@@ -1,0 +1,4 @@
+include LICENSE README.md contract.lock.json
+recursive-include docs *.md
+recursive-include packaging *.desktop *.service
+recursive-include tests *.py *.json
