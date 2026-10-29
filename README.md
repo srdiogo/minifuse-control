@@ -34,8 +34,11 @@ established CLI controls; this app does not infer MF4 layouts for them.
 MF4 INST1, INST2 and shared +48 V use confirmed readback, including physical
 button changes. Clicking applies a verified change when the active module
 advertises input-switch support; an older module provides read-only indicators.
-Meters and logo-button activation remain unavailable pending validation. A configured gain is not a
-signal meter. Effects, firmware/device-storage writers and system audio routing
+Calibrated source and post-master mix peaks appear alongside the faders in dBFS.
+They use device C2 readback, with a 500 ms freshness timeout. Mix peaks precede
+destination routing and can differ from physical outputs on USB direct.
+Logo-button activation remains unavailable. A configured gain is not a signal
+meter. Effects, firmware/device-storage writers and system audio routing
 changes are outside scope.
 
 ## Development and validation

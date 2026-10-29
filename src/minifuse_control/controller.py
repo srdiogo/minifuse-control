@@ -1,17 +1,19 @@
 """Capability-driven presentation. All hardware semantics remain in mf-core."""
 
 import json
+import math
 import os
 import secrets
 import time
 from pathlib import Path
-from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl, QProcess
+from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl, QProcess, QTimer
 from .live import LiveControl
 
 
 class Controller(QObject):
     changed = Signal()
     discardEdits = Signal()
+    metersChanged = Signal()
 
     def __init__(self, client, preferences, parent=None):
         super().__init__(parent)
@@ -34,6 +36,12 @@ class Controller(QObject):
         self._live_key = ""
         self._live_supported = False
         self._edit_revision = ""
+        self._meters = {}
+        self._meters_supported = False
+        self._meter_timeout = QTimer(self)
+        self._meter_timeout.setSingleShot(True)
+        self._meter_timeout.setInterval(500)
+        self._meter_timeout.timeout.connect(self._clear_meters)
         client.ready.connect(self._ready)
         client.unavailable.connect(self._unavailable)
         client.event.connect(self._event)
@@ -106,6 +114,53 @@ class Controller(QObject):
     @Property("QVariantMap", notify=changed)
     def capabilities(self):
         return self._state.get("capabilities", {})
+
+    @Property("QVariantMap", notify=metersChanged)
+    def meters(self):
+        return self._meters
+
+    def _clear_meters(self):
+        self._meter_timeout.stop()
+        if self._meters:
+            self._meters = {}
+            self.metersChanged.emit()
+
+    def _got_meters(self, data):
+        if (
+            not self._device
+            or data.get("device_id") != self._state.get("device_id")
+            or data.get("generation") != self._state.get("generation")
+        ):
+            return
+        sources, mixes = data.get("sources_dbfs"), data.get("mixes_dbfs")
+
+        def valid(value):
+            return value is None or (
+                type(value) in (int, float)
+                and math.isfinite(value)
+                and -200 <= value <= 0
+            )
+
+        if (
+            data.get("available") is not True
+            or not self.capabilities.get("signal_meters")
+            or not isinstance(sources, list)
+            or len(sources) != 10
+            or not all(valid(v) for v in sources)
+            or not isinstance(mixes, list)
+            or len(mixes) != 3
+            or not all(
+                isinstance(pair, list)
+                and len(pair) == 2
+                and all(valid(v) for v in pair)
+                for pair in mixes
+            )
+        ):
+            self._clear_meters()
+            return
+        self._meters = data
+        self._meter_timeout.start()
+        self.metersChanged.emit()
 
     @Property("QVariantList", notify=changed)
     def presets(self):
@@ -210,6 +265,7 @@ class Controller(QObject):
 
     def _ready(self, negotiation):
         self._live_supported = "live_controls" in negotiation.get("features", [])
+        self._meters_supported = "signal_meters" in negotiation.get("features", [])
         self._online = True
         self._status = "Connected to mf-service"
         self.client.request(
@@ -224,12 +280,14 @@ class Controller(QObject):
                     "operation_finished",
                 ]
                 + (["control_updated"] if self._live_supported else [])
+                + (["meters_updated"] if self._meters_supported else [])
             },
             self._subscribed,
         )
         self.loadPresets()
 
     def _subscribed(self, result, error):
+        self._clear_meters()
         if error:
             self._failure(error)
             return
@@ -275,6 +333,7 @@ class Controller(QObject):
         self.changed.emit()
 
     def _unavailable(self, reason):
+        self._clear_meters()
         self._stop_live()
         self._online = False
         self._busy = False
@@ -288,9 +347,12 @@ class Controller(QObject):
 
     def _event(self, event):
         name, data = event["event"], event["data"]
-        if name == "state_changed":
+        if name == "meters_updated":
+            self._got_meters(data)
+        elif name == "state_changed":
             if self._device and data["device_id"] == self._device["device_id"]:
                 if data.get("generation") != self._state.get("generation"):
+                    self._clear_meters()
                     self.discardEdits.emit()
                     self._preview = {}
                 if (
@@ -308,10 +370,13 @@ class Controller(QObject):
                         self.cancelControl()
                         self.discardEdits.emit()
                 self._state = data
+                if not self.capabilities.get("signal_meters"):
+                    self._clear_meters()
                 self.changed.emit()
             elif not self._state:
                 self.refresh()
         elif name in ("device_added", "device_removed", "capabilities_changed"):
+            self._clear_meters()
             if name != "device_added":
                 self._state = {}
                 self._preview = {}

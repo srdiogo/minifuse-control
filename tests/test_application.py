@@ -199,6 +199,46 @@ class ApplicationTests(unittest.TestCase):
             engine.deleteLater()
             APP.processEvents()
 
+    def test_meters_are_ephemeral_expire_and_never_interrupt_an_edit(self):
+        self.controller._state["capabilities"]["signal_meters"] = True
+        baseline = copy.deepcopy(self.controller._state)
+        revision = self.controller.editRevision
+        state_updates, meter_updates = [], []
+        self.controller.changed.connect(lambda: state_updates.append(True))
+        self.controller.metersChanged.connect(lambda: meter_updates.append(True))
+        frame = {
+            "device_id": baseline["device_id"],
+            "generation": baseline["generation"],
+            "available": True,
+            "sources_dbfs": [-80.0] * 10,
+            "mixes_dbfs": [[-86.0, None]] * 3,
+        }
+        self.controller._event({"event": "meters_updated", "data": frame})
+        self.assertEqual(self.controller.meters["sources_dbfs"][0], -80.0)
+        self.assertEqual(self.controller._state, baseline)
+        self.assertEqual(self.controller.editRevision, revision)
+        self.assertEqual(state_updates, [])
+        self.assertTrue(meter_updates)
+        self.assertEqual(self.client.requests, [])
+        self.controller._event(
+            {
+                "event": "meters_updated",
+                "data": {**frame, "generation": "old-generation"},
+            }
+        )
+        self.assertEqual(self.controller.meters, frame)
+        QTest.qWait(550)
+        self.assertEqual(self.controller.meters, {})
+        for invalid in (
+            {**frame, "available": False},
+            {**frame, "sources_dbfs": [1.0] * 10},
+            {**frame, "mixes_dbfs": [[False, None]] * 3},
+        ):
+            self.controller._event({"event": "meters_updated", "data": frame})
+            self.controller._event({"event": "meters_updated", "data": invalid})
+            self.assertEqual(self.controller.meters, {})
+        self.assertEqual(self.client.requests, [])
+
     def test_feedback_never_moves_the_controls_between_gestures(self):
         engine = QQmlApplicationEngine()
         engine.setInitialProperties({"controller": self.controller})

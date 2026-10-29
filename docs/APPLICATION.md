@@ -101,7 +101,13 @@ plan/apply action; the indicator changes only after confirmed device state.
 Writes require `input_switches`; an older module retains read-only indicators.
 Phantom power is labelled as shared by inputs 1–2 and is excluded from mixer
 preset restoration. No automatic input-mode or power restoration is performed.
-Meters remain unavailable until a calibrated source is implemented. Input
+Signal meters use separate `meters_updated` events, target at most 20 Hz and
+clear after 500 ms without fresh data. They never update configuration revisions
+or cancel an edit. Each source has a peak bar; the master has L/R mix bars. The
+scale is −96 to 0 dBFS; zero magnitude is silence. Numeric peak values are
+available in accessible descriptions and hover tips. The bars use the native
+palette. Mix meters are post-master and pre-routing, so direct USB playback can
+bypass the displayed mix. Meter data is never synthesized from fader positions. Input
 trims are read-only as established by the current backend. No mix-copy or
 unsupported mono/stereo conversion is implied by visual stereo grouping.
 

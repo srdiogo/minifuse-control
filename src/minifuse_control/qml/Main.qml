@@ -74,7 +74,7 @@ ApplicationWindow {
                     spacing: 18
                     Label { text: qsTr("Device capabilities"); font.pixelSize: 24; font.bold: true }
                     Label { text: qsTr("MiniFuse 4 mixer, routes and host snapshots are available with the matching service/module. MiniFuse 1/2 retain their established CLI toggles."); wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    Label { text: qsTr("MiniFuse 4 INST1, INST2 and shared +48 V follow confirmed device state. Writing requires a module with verified input-switch support. Signal meters and logo-button events remain unavailable. Input trims are read-only."); wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Label { text: qsTr("MiniFuse 4 INST1, INST2 and shared +48 V follow confirmed device state. Input writes and signal meters require matching module features. Mix meters follow master gain, before output routing; USB direct can bypass that mix. Logo-button events remain unavailable. Input trims are read-only."); wrapMode: Text.Wrap; Layout.fillWidth: true }
                     Label { text: qsTr("Physical-button activation target"); font.bold: true }
                     ComboBox {
                         model: [qsTr("Disabled"), qsTr("Application"), qsTr("Omarchy panel")]

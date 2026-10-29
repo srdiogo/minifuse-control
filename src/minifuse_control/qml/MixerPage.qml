@@ -23,7 +23,15 @@ ColumnLayout {
             TabButton { text: qsTr("Loopback") }
         }
         Item { Layout.fillWidth: true }
-        Label { text: qsTr("Configured levels · meters unavailable"); opacity: 0.65; font.pixelSize: 12 }
+        Label {
+            text: root.controller.meters.available === true ? qsTr("Source peaks · Mix peaks after master · dBFS") : root.controller.capabilities.signal_meters ? qsTr("Waiting for fresh meters…") : qsTr("Meters unavailable")
+            opacity: 0.65
+            font.pixelSize: 11
+            Layout.fillWidth: true
+            Layout.preferredWidth: 310
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+        }
     }
     Label {
         visible: !root.mix
@@ -141,6 +149,9 @@ ColumnLayout {
                     maximum: 0
                     confirmed: root.mix ? root.mix.master_db : null
                     revision: root.controller.editRevision
+                    meterName: root.mix ? root.mix.mix.toUpperCase() + qsTr(" mix") : qsTr("Mix")
+                    metersAvailable: root.controller.meters.available === true
+                    meterValues: root.controller.meters.mixes_dbfs ? root.controller.meters.mixes_dbfs[root.selected] : [null, null]
                     onAdjusted: (value, finish) => root.controller.adjust({kind: "master_level", mix: root.mix.mix}, value, finish)
                     onCancelled: root.controller.cancelControl()
                     onCommitted: value => root.controller.change({kind: "master", mix: root.mix.mix, level_db: value})

@@ -65,6 +65,9 @@ StripFrame {
         label: qsTr("Level")
         confirmed: root.channel.derived_level_db
         revision: root.controller.editRevision
+        meterName: root.channel.channel.toUpperCase()
+        metersAvailable: root.controller.meters.available === true
+        meterValues: root.controller.meters.sources_dbfs ? [root.controller.meters.sources_dbfs[["analog1", "analog2", "analog3", "analog4", "usb1", "usb2", "usb3", "usb4", "usb5", "usb6"].indexOf(root.channel.channel)]] : []
         onAdjusted: (value, finish) => root.controller.adjust({kind: "channel_level", mix: root.mixName, source: root.channel.channel}, value, finish)
         onCancelled: root.controller.cancelControl()
         onCommitted: value => root.send({level_db: value})

@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -14,6 +15,9 @@ ColumnLayout {
     property bool conflict: false
     property real preview: minimum
     property bool released: false
+    property var meterValues: []
+    property bool metersAvailable: false
+    property string meterName: label
     signal adjusted(var value, bool finish)
     signal cancelled()
     signal committed(var value)
@@ -88,6 +92,24 @@ ColumnLayout {
             else if (root.dirty && !root.released) root.track(value, true)
         }
         Keys.onEscapePressed: { root.cancelled(); root.reset() }
+        Row {
+            anchors.left: parent.right
+            anchors.leftMargin: 3
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            spacing: 2
+            Repeater {
+                model: root.meterValues.length || 1
+                delegate: SignalMeter {
+                    required property int index
+                    height: parent.height
+                    width: 9
+                    available: root.metersAvailable
+                    peakDbfs: root.meterValues.length > index ? root.meterValues[index] : null
+                    channelName: root.meterName + (root.meterValues.length > 1 ? (index === 0 ? " L" : " R") : "")
+                }
+            }
+        }
     }
     RowLayout {
         objectName: "levelEntry"
