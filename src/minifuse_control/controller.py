@@ -61,6 +61,16 @@ class Controller(QObject):
             and self._device.get("capabilities", {}).get("mixer")
         )
 
+    @Property("QVariantMap", notify=changed)
+    def inputs(self):
+        if not self.capabilities.get("switch_readback"):
+            return {}
+        return self._state.get("state", {}).get("inputs", {})
+
+    @Property(bool, notify=changed)
+    def canWriteInputs(self):
+        return bool(self.canWrite and self.capabilities.get("input_switches"))
+
     @Property(bool, notify=changed)
     def liveActive(self):
         return self._live is not None
@@ -440,6 +450,8 @@ class Controller(QObject):
     def change(self, change):
         if not self.canWrite:
             return
+        if change.get("kind") == "input_switch" and not self.canWriteInputs:
+            return
         self._busy = True
         self._message = "Preparing verified change…"
         params = {
@@ -449,6 +461,16 @@ class Controller(QObject):
         }
         self.changed.emit()
         self.client.request("plan_changes", params, self._planned_change)
+
+    @Slot(str, bool)
+    def setInputSwitch(self, target, enabled):
+        if (
+            self.canWriteInputs
+            and target in ("inst1", "inst2", "phantom_power")
+            and isinstance(self.inputs.get(target), bool)
+            and self.inputs[target] != enabled
+        ):
+            self.change({"kind": "input_switch", "target": target, "enabled": enabled})
 
     def _planned_change(self, result, error):
         if error:

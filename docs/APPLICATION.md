@@ -94,8 +94,13 @@ The first release uses only the mapped MF4 control subset. MF1/MF2 discovery
 must not expose an MF4 mixer; legacy CLI availability can be explained.
 Hide or explain unavailable functions rather than sending guessed selectors.
 
-INST/+48 V indicators require reliable backend readback, not remembered last
-commands. Shared phantom power must be presented as shared where supported.
+MF4 INST1, INST2 and shared +48 V indicators use authoritative `state.inputs`
+readback on connection and state events. The UI displays On/Off text as well as
+highlighting, with accessible checkbox state. A click submits a discrete typed
+plan/apply action; the indicator changes only after confirmed device state.
+Writes require `input_switches`; an older module retains read-only indicators.
+Phantom power is labelled as shared by inputs 1–2 and is excluded from mixer
+preset restoration. No automatic input-mode or power restoration is performed.
 Meters remain unavailable until a calibrated source is implemented. Input
 trims are read-only as established by the current backend. No mix-copy or
 unsupported mono/stereo conversion is implied by visual stereo grouping.

@@ -12,6 +12,7 @@ ColumnLayout {
     property var mix: controller.mixes.length > selected ? controller.mixes[selected] : null
     property var mixCapabilities: controller.capabilities.mixes && controller.capabilities.mixes.length > selected ? controller.capabilities.mixes[selected] : null
     spacing: 14
+    InputControls { controller: root.controller }
     RowLayout {
         TabBar {
             Layout.preferredWidth: 420

@@ -31,8 +31,10 @@ restore keeps a comparison and an explicit Apply step.
 
 The backend currently exposes the validated MF4 mixer only. MF1/MF2 keep their
 established CLI controls; this app does not infer MF4 layouts for them.
-INST/+48 V readback, meters and physical-button activation remain unavailable
-until their model-specific evidence gates pass. A configured gain is not a
+MF4 INST1, INST2 and shared +48 V use confirmed readback, including physical
+button changes. Clicking applies a verified change when the active module
+advertises input-switch support; an older module provides read-only indicators.
+Meters and logo-button activation remain unavailable pending validation. A configured gain is not a
 signal meter. Effects, firmware/device-storage writers and system audio routing
 changes are outside scope.
 

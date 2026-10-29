@@ -129,6 +129,76 @@ class ApplicationTests(unittest.TestCase):
             engine.deleteLater()
             APP.processEvents()
 
+    def test_input_buttons_use_confirmed_state_and_gate_older_modules(self):
+        from PySide6.QtCore import QPointF, QPoint, Qt
+
+        self.controller._state["state"]["inputs"] = {
+            "inst1": False,
+            "inst2": False,
+            "phantom_power": True,
+        }
+        self.controller._state["capabilities"]["switch_readback"] = True
+        self.controller._state["capabilities"]["input_switches"] = True
+        engine = QQmlApplicationEngine()
+        engine.setInitialProperties({"controller": self.controller})
+        engine.load(QUrl.fromLocalFile(str(ROOT / "src/minifuse_control/qml/Main.qml")))
+        window: QQuickWindow = engine.rootObjects()[0]
+
+        def visual(item, name):
+            if item.objectName() == name:
+                return item
+            for child in item.childItems():
+                found = visual(child, name)
+                if found is not None:
+                    return found
+            return None
+
+        try:
+            QTest.qWait(30)
+            buttons = {
+                name: visual(window.contentItem(), "inputSwitch-" + name)
+                for name in ("inst1", "inst2", "phantom_power")
+            }
+            self.assertEqual(self.client.requests, [])
+            self.assertFalse(buttons["inst1"].property("highlighted"))
+            self.assertTrue(buttons["phantom_power"].property("highlighted"))
+            physical = copy.deepcopy(self.controller._state)
+            physical["revision"] = "physical-inst1"
+            physical["state"]["inputs"]["inst1"] = True
+            self.controller._event({"event": "state_changed", "data": physical})
+            QTest.qWait(10)
+            self.assertTrue(buttons["inst1"].property("highlighted"))
+            self.assertEqual(self.client.requests, [])
+            button = buttons["inst2"]
+            point = button.mapToScene(QPointF(button.width() / 2, button.height() / 2))
+            QTest.mouseClick(
+                window,
+                Qt.LeftButton,
+                Qt.NoModifier,
+                QPoint(int(point.x()), int(point.y())),
+            )
+            self.assertFalse(button.property("highlighted"))
+            method, params, _ = self.client.requests[-1]
+            self.assertEqual(method, "plan_changes")
+            self.assertEqual(params["expected_revision"], "physical-inst1")
+            self.assertEqual(
+                params["changes"],
+                [{"kind": "input_switch", "target": "inst2", "enabled": True}],
+            )
+            self.controller._busy = False
+            self.controller._state["capabilities"]["input_switches"] = False
+            self.controller.changed.emit()
+            QTest.qWait(10)
+            self.assertFalse(button.property("enabled"))
+            self.assertTrue(buttons["phantom_power"].property("highlighted"))
+            before = len(self.client.requests)
+            self.controller.setInputSwitch("phantom_power", False)
+            self.assertEqual(len(self.client.requests), before)
+        finally:
+            window.close()
+            engine.deleteLater()
+            APP.processEvents()
+
     def test_feedback_never_moves_the_controls_between_gestures(self):
         engine = QQmlApplicationEngine()
         engine.setInitialProperties({"controller": self.controller})
