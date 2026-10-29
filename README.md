@@ -2,11 +2,10 @@
 
 A standalone Qt Quick application for the MiniFuse Linux control platform,
 with an optional, separately usable desktop activation agent. It connects to
-`mf-service`; all device semantics, verification and recovery remain in
+[mf-service](https://github.com/srdiogo/mf-service); all device semantics, verification and recovery remain in
 `mf-core`. Omarchy is optional.
 
-**Status: implemented development version, awaiting hardware and desktop release
-acceptance.** The application includes all three MF4 mixer views, routes,
+**Status: development preview with bounded MiniFuse 4 hardware validation.** The application includes all three MF4 mixer views, routes,
 source membership, configured levels/pan, mute/solo, host presets and operation
 recovery. Building/testing does not install startup entries or change hardware.
 
@@ -53,8 +52,8 @@ QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME= QT_QUICK_CONTROLS_STYLE=Basic QT
 ```
 
 Tests use the canonical real-service contract and deterministic local socket
-peers. There is no fake device mode in the normal application. Hardware,
-Wayland focus/scaling and clean-machine package acceptance are separate gates.
+peers. There is no fake device mode in the normal application. Bounded hardware integration has been exercised on one MF4. Broader hardware,
+Wayland focus/scaling and clean-machine package acceptance remain separate gates.
 
 ## Documentation
 
@@ -62,9 +61,11 @@ Wayland focus/scaling and clean-machine package acceptance are separate gates.
 - [Desktop agent and physical-button activation](docs/DESKTOP.md)
 - [Implementation and validation](docs/IMPLEMENTATION.md)
 - [Installation, optional integration and removal](docs/INSTALL.md)
+- [Contribution workflow](CONTRIBUTING.md)
 
-The canonical protocol is `mf-service/docs/IPC.md`, with continuous interaction
-specified in `mf-service/docs/LIVE_CONTROLS.md`. Client fixture copies are pinned
+The canonical [protocol](https://github.com/srdiogo/mf-service/blob/main/docs/IPC.md)
+and [continuous interaction contract](https://github.com/srdiogo/mf-service/blob/main/docs/LIVE_CONTROLS.md)
+are maintained by the service. Client fixture copies are pinned
 by source commit and SHA-256 rather than maintaining a separate API.
 
 The Python distribution has no unconditional Qt dependency. Install the `gui`

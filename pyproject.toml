@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "minifuse-control"
 version = "0.1.0"
 description = "Qt Quick MiniFuse control application and optional desktop agent"
+readme = "README.md"
+authors = [{name = "Diogo de Medeiros", email = "sr.diogo@gmail.com"}]
 requires-python = ">=3.12"
 license = "MIT"
 dependencies = []
@@ -13,6 +15,12 @@ dependencies = []
 [project.optional-dependencies]
 gui = ["PySide6==6.11.2"]
 dev = ["ruff==0.17.3"]
+
+[project.urls]
+Homepage = "https://github.com/srdiogo/minifuse-control"
+Repository = "https://github.com/srdiogo/minifuse-control"
+Issues = "https://github.com/srdiogo/minifuse-control/issues"
+Documentation = "https://github.com/srdiogo/minifuse-control/tree/main/docs"
 
 [project.scripts]
 minifuse-control = "minifuse_control.app:main"

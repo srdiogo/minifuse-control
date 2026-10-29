@@ -55,8 +55,8 @@ snapshots enter public fixtures.
 The complete mapped MF4 feature set, preset workflows, error/reconnect states,
 accessibility and normal launcher must pass before application release.
 Optional button support remains disabled until its evidence gate passes.
-Meters, complete MF1/MF2 control and native device-save confirmation are not
-release claims without their own implementation and validation.
+MF4 meters have calibrated readback with documented coverage. Complete MF1/MF2
+control and native device-save confirmation remain unavailable.
 
 Document dependencies, service/API compatibility, package installation/update/
 removal, optional startup and troubleshooting. The application must not install
@@ -72,10 +72,14 @@ strict framing and a real QLocalSocket peer. A separate-process test verifies
 single-instance activation. Agent tests cover validated capability/generation,
 one target, deduplication and no activation from baselines.
 
-Local validation uses Python 3.14.7, PySide6 6.11.2 and Qt 6.11.2. CI declares
-Python 3.12/3.14; a declared job is not a claim that hosted CI has run. No
+Local validation uses Python 3.14.7, PySide6 6.11.2 and Qt 6.11.2. CI tests
+Python 3.12/3.14 with Basic and Fusion styles. Hosted results must be checked
+on the published source revision. No
 production service/module, session startup or global desktop setting is changed
-by these tests. The installed service and real hardware still need acceptance.
+by these tests. The hardware-backed service, input LEDs and live Qt meter path have bounded
+validation on one MF4; see APPLICATION.md and the service validation report.
+Clean-machine installation, other rates and broader desktop acceptance remain
+open.
 
 The wheel and source distribution build locally. A temporary clean virtual
 environment installs/removes the wheel, verifies bundled QML/icon resources and
