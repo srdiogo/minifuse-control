@@ -2,8 +2,11 @@
 Type=Application
 Name=MiniFuse Control
 Comment=MiniFuse mixer, routing and host presets
+TryExec=minifuse-control
 Exec=minifuse-control
 Icon=io.github.srdiogo.MiniFuseControl
 Terminal=false
 Categories=AudioVideo;Audio;Mixer;
 StartupNotify=true
+StartupWMClass=io.github.srdiogo.MiniFuseControl
+Keywords=Arturia;MiniFuse;Audio;Mixer;

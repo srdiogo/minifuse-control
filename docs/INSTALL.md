@@ -64,3 +64,35 @@ Run the user manager's daemon-reload after removing a unit. Preserve presets,
 backups, preferences and unresolved operation evidence unless the user explicitly
 chooses to delete them. No kernel module, udev rule, audio setting or Omarchy
 configuration is changed by the GUI's removal.
+
+## Arch distribution preview
+
+The public source repository is <https://github.com/srdiogo/minifuse-control>.
+Native package recipes under `packaging/arch/` pin an immutable source commit
+and archive checksum. The packages have separate ownership:
+
+- `minifuse-control-common`: shared Python state/framing/preferences modules.
+- `minifuse-control`: Qt application, QML, launcher and icon; depends on the
+  common package, the compatible service and distribution PySide6 (tested at 6.11.2; the pip extra
+  remains pinned to that version).
+- `minifuse-desktop-agent`: standard-library activation policy and optional
+  user unit; depends on the common package and service, without Qt.
+
+The agent package is optional and current logo-button support remains disabled.
+Installing either package does not enable a unit, restore a preset or modify
+Omarchy. The module and active-session device permissions remain separate
+administrator-managed prerequisites from the mf-cli project.
+
+Build with `makepkg` as an ordinary user and review the resulting package file
+lists before installing through the system package manager. These are preview
+recipes, not an AUR release or a claim of clean-machine acceptance. Upgrades
+preserve preferences and service-owned presets/journals. Removal through the
+package manager removes owned program files; disable an enabled optional agent
+unit first and retain user evidence until deliberately archived.
+
+CI also builds a source distribution and a wheel from that source distribution,
+installs it into a clean environment without Qt, exercises both help entrypoints
+and the agent import, checks resources, then uninstalls it. The wheel is the
+portable Python distribution; Linux Qt dependencies and the service/module are
+separate. Native package construction is tested on Arch rather than implied by
+an Ubuntu-built Python wheel.
