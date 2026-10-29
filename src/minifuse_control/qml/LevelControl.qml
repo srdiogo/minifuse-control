@@ -38,10 +38,28 @@ ColumnLayout {
     onRevisionChanged: { if (dirty || numeric.activeFocus) conflict = true }
     onConfirmedChanged: { if (!numeric.activeFocus) numeric.text = displayText() }
 
-    Label { text: root.label; Layout.alignment: Qt.AlignHCenter; font.pixelSize: 12 }
     Label {
-        text: root.dirty ? root.preview.toFixed(1) + " dB · adjusting" : root.displayText() + " dB"
-        Layout.alignment: Qt.AlignHCenter
+        objectName: "levelCaption"
+        text: root.label
+        Layout.fillWidth: true
+        Layout.minimumHeight: 18
+        Layout.preferredHeight: 18
+        Layout.maximumHeight: 18
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
+        font.pixelSize: 12
+    }
+    Label {
+        objectName: "levelValue"
+        text: (root.dirty ? root.preview.toFixed(2) : root.displayText()) + " dB"
+        Layout.fillWidth: true
+        Layout.minimumHeight: 20
+        Layout.preferredHeight: 20
+        Layout.maximumHeight: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
         font.family: "monospace"
         font.pixelSize: 12
         Accessible.name: root.label + " configured level " + text
@@ -53,6 +71,9 @@ ColumnLayout {
         Layout.fillWidth: !root.vertical
         Layout.alignment: Qt.AlignHCenter
         Layout.minimumHeight: root.vertical ? 130 : 34
+        Layout.preferredWidth: root.vertical ? 40 : -1
+        Layout.minimumWidth: root.vertical ? 40 : 0
+        Layout.maximumWidth: root.vertical ? 40 : Number.POSITIVE_INFINITY
         orientation: root.vertical ? Qt.Vertical : Qt.Horizontal
         from: root.minimum
         to: root.maximum
@@ -69,10 +90,19 @@ ColumnLayout {
         Keys.onEscapePressed: { root.cancelled(); root.reset() }
     }
     RowLayout {
+        objectName: "levelEntry"
         Layout.alignment: Qt.AlignHCenter
+        Layout.minimumHeight: 30
+        Layout.preferredHeight: 30
+        Layout.maximumHeight: 30
+        spacing: 6
         TextField {
             id: numeric
-            Layout.preferredWidth: 66
+            Layout.minimumWidth: 72
+            Layout.preferredWidth: 72
+            Layout.maximumWidth: 72
+            Layout.fillHeight: true
+            font.pixelSize: 12
             horizontalAlignment: Text.AlignHCenter
             text: root.displayText()
             selectByMouse: true
@@ -88,7 +118,24 @@ ColumnLayout {
             onActiveFocusChanged: { if (!activeFocus) text = root.displayText() }
             Keys.onEscapePressed: { root.reset(); focus = false }
         }
-        ToolButton { text: "−∞"; Accessible.name: root.label + " silence"; onClicked: root.finish(null) }
+        ToolButton {
+            Layout.minimumWidth: 32
+            Layout.preferredWidth: 32
+            Layout.maximumWidth: 32
+            Layout.fillHeight: true
+            text: "−∞"
+            Accessible.name: root.label + " silence"
+            onClicked: root.finish(null)
+        }
     }
-    Label { visible: root.conflict; text: qsTr("State changed; edit will be discarded"); wrapMode: Text.Wrap; Layout.maximumWidth: 140; font.pixelSize: 11 }
+    Label {
+        text: root.conflict ? qsTr("State changed; edit will be discarded") : ""
+        Layout.fillWidth: true
+        Layout.minimumHeight: 32
+        Layout.preferredHeight: 32
+        Layout.maximumHeight: 32
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.Wrap
+        font.pixelSize: 11
+    }
 }

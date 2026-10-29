@@ -167,6 +167,85 @@ class ApplicationTests(unittest.TestCase):
         engine.deleteLater()
         APP.processEvents()
 
+    def test_channel_and_master_tracks_stay_aligned_during_edits(self):
+        from PySide6.QtCore import QPointF
+
+        engine = QQmlApplicationEngine()
+        engine.setInitialProperties({"controller": self.controller})
+        engine.load(QUrl.fromLocalFile(str(ROOT / "src/minifuse_control/qml/Main.qml")))
+        window: QQuickWindow = engine.rootObjects()[0]
+
+        def visual(item, name):
+            if item.objectName() == name:
+                return item
+            for child in item.childItems():
+                found = visual(child, name)
+                if found is not None:
+                    return found
+            return None
+
+        def geometry(control, name):
+            item = visual(control, name)
+            self.assertIsNotNone(item, name)
+            point = item.mapToScene(QPointF(0, 0))
+            return (point.y(), item.height())
+
+        try:
+            page = visual(window.contentItem(), "mixerPage")
+            for mix_index in range(3):
+                page.setProperty("selected", mix_index)
+                for width, height in ((1280, 820), (960, 1056), (840, 640)):
+                    window.setWidth(width)
+                    window.setHeight(height)
+                    QTest.qWait(30)
+                    master = visual(window.contentItem(), "masterControl")
+                    sources = [
+                        visual(window.contentItem(), "sourceLevel-" + c["channel"])
+                        for c in self.controller.mixes[mix_index]["channels"]
+                    ]
+                    self.assertTrue(all(sources))
+                    reference = {
+                        name: geometry(master, name)
+                        for name in (
+                            "levelCaption",
+                            "levelValue",
+                            "levelSlider",
+                            "levelEntry",
+                        )
+                    }
+                    self.assertGreaterEqual(reference["levelSlider"][1], 130)
+                    for control in sources:
+                        for name, expected in reference.items():
+                            actual = geometry(control, name)
+                            self.assertAlmostEqual(actual[0], expected[0], delta=1)
+                            self.assertAlmostEqual(actual[1], expected[1], delta=1)
+                        slider = visual(control, "levelSlider")
+                        self.assertAlmostEqual(
+                            slider.x() + slider.width() / 2,
+                            control.width() / 2,
+                            delta=1,
+                        )
+                    # Local motion and a conflict must not resize any row or widen a strip.
+                    source = sources[0]
+                    before = {name: geometry(source, name) for name in reference}
+                    before_width = source.width()
+                    source.setProperty("preview", -59.75)
+                    source.setProperty("dirty", True)
+                    source.setProperty("conflict", True)
+                    QTest.qWait(20)
+                    self.assertEqual(source.width(), before_width)
+                    for name, expected in before.items():
+                        self.assertEqual(geometry(source, name), expected)
+                    text = visual(source, "levelValue").property("text")
+                    self.assertEqual(text, "-59.75 dB")
+                    self.assertNotIn("adjusting", text.lower())
+                    source.reset()
+            self.assertEqual(self.client.requests, [])
+        finally:
+            window.close()
+            engine.deleteLater()
+            APP.processEvents()
+
     def test_commit_uses_a_plan_and_retains_identity_before_apply(self):
         self.controller.change({"kind": "master", "mix": "out12", "level_db": None})
         method, params, callback = self.client.requests.pop()

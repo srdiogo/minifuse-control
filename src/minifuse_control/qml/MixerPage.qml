@@ -5,6 +5,7 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: root
+    objectName: "mixerPage"
     required property var controller
     property int selected: 0
     onSelectedChanged: { controller.cancelControl(); controller.discardEdits() }
@@ -57,62 +58,82 @@ ColumnLayout {
             }
         }
     }
-    RowLayout {
+    ScrollView {
+        id: stripViewport
+        objectName: "stripViewport"
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: 16
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            clip: true
-            contentWidth: strips.implicitWidth
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
-            RowLayout {
-                id: strips
-                height: parent.height
-                spacing: 10
-                Repeater {
-                    // A stable numeric model keeps active edits alive when a
-                    // confirmed revision changes, so conflicts can be shown.
-                    model: root.mix ? root.mix.channels.length : 0
-                    delegate: ChannelStrip {
-                        required property int index
-                        channel: root.mix.channels[index]
-                        mixName: root.mix.mix
-                        controller: root.controller
+        clip: true
+        contentWidth: availableWidth
+        contentHeight: stripArea.height
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        RowLayout {
+            id: stripArea
+            width: stripViewport.availableWidth
+            height: Math.max(480, stripViewport.availableHeight)
+            spacing: 16
+            ScrollView {
+                id: sourceScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: strips.implicitWidth
+                contentHeight: strips.height
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                RowLayout {
+                    id: strips
+                    height: Math.max(0, sourceScroll.availableHeight - sourceScroll.effectiveScrollBarHeight)
+                    spacing: 10
+                    Repeater {
+                        // Stable delegates retain the active preview across readbacks.
+                        model: root.mix ? root.mix.channels.length : 0
+                        delegate: ChannelStrip {
+                            required property int index
+                            channel: root.mix.channels[index]
+                            mixName: root.mix.mix
+                            controller: root.controller
+                        }
                     }
                 }
             }
-        }
-        Frame {
-            Layout.preferredWidth: 205
-            Layout.fillHeight: true
-            visible: root.mix !== null
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 12
-                Label { text: qsTr("MIX MASTER"); font.bold: true; Layout.alignment: Qt.AlignHCenter }
-                ComboBox {
-                    id: route
-                    Layout.fillWidth: true
-                    model: root.mixCapabilities ? root.mixCapabilities.routes : []
-                    currentIndex: root.mix ? model.indexOf(root.mix.route) : -1
-                    enabled: root.controller.canWrite
-                    Accessible.name: qsTr("Output route")
-                    onActivated: root.controller.change({kind: "route", mix: root.mix.mix, source: currentText})
+            StripFrame {
+                objectName: "masterStrip"
+                Layout.preferredWidth: 205
+                Layout.bottomMargin: sourceScroll.effectiveScrollBarHeight
+                visible: root.mix !== null
+                headerContent: ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 6
+                    Label {
+                        text: qsTr("MIX MASTER")
+                        font.bold: true
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 20
+                        Layout.preferredHeight: 20
+                        Layout.maximumHeight: 20
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                    }
+                    ComboBox {
+                        id: route
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 30
+                        Layout.preferredHeight: 30
+                        Layout.maximumHeight: 30
+                        model: root.mixCapabilities ? root.mixCapabilities.routes : []
+                        currentIndex: root.mix ? model.indexOf(root.mix.route) : -1
+                        enabled: root.controller.canWrite
+                        Accessible.name: qsTr("Output route")
+                        onActivated: root.controller.change({kind: "route", mix: root.mix.mix, source: currentText})
+                    }
+                    Item { Layout.fillHeight: true }
                 }
-                Label {
-                    Layout.fillWidth: true
-                    visible: root.mix && root.mix.route !== "mix"
-                    text: qsTr("This destination bypasses its custom mix. The faders still edit that mix.")
-                    wrapMode: Text.Wrap
-                    font.pixelSize: 12
-                }
-                LevelControl {
+                controlContent: LevelControl {
                     id: master
                     objectName: "masterControl"
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
+                    anchors.fill: parent
                     enabled: root.controller.canWrite || (root.controller.liveActive && root.controller.activeControlKey === "master_level:" + root.mix.mix + ":")
                     label: qsTr("Master")
                     minimum: -64
@@ -124,8 +145,15 @@ ColumnLayout {
                     onCommitted: value => root.controller.change({kind: "master", mix: root.mix.mix, level_db: value})
                     onConflicted: root.controller.editConflict()
                 }
+                footerContent: Label {
+                    anchors.fill: parent
+                    text: root.mix && root.mix.route !== "mix" ? qsTr("This destination bypasses its custom mix. The faders still edit that mix.") : qsTr("Hardware mix level")
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                    font.pixelSize: 11
+                    opacity: 0.7
+                }
                 Connections { target: root.controller; function onDiscardEdits() { master.reset() } }
-                Label { text: qsTr("Hardware mix level"); Layout.alignment: Qt.AlignHCenter; font.pixelSize: 11; opacity: 0.7 }
             }
         }
     }

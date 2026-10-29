@@ -31,7 +31,12 @@ Provide separate out12, out34 and loopback mix views with a stable master area.
 Each supported source strip shows its name, configured gain/pan and mute/solo.
 Present analog mono/USB pair membership only where advertised by capabilities.
 Use horizontal scrolling at narrow widths without hiding the master/route.
-Include precise numeric entry and a clear −infinity representation.
+Include precise numeric entry and a clear −infinity representation. Source and
+master strips share fixed header/footer regions and the same central control
+geometry, including scrollbar space. Captions, dB values, track endpoints and
+numeric entries align across strips. Fader values keep one numeric format;
+operation feedback belongs in the status area. A short window scrolls the
+mixer vertically rather than compressing controls below their usable height.
 
 Show the selected route next to the corresponding mix. If USB direct or
 another output route bypasses that mix, explain that the mix faders do not
