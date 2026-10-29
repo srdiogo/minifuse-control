@@ -1,7 +1,7 @@
 # Maintainer: Diogo de Medeiros <sr.diogo@gmail.com>
 pkgbase=minifuse-control
 pkgname=('minifuse-control-common' 'minifuse-control' 'minifuse-desktop-agent')
-pkgver=0.1.0.r8.g0d82e54
+pkgver=0.1.0.r14.gc741b18
 pkgrel=1
 pkgdesc='MiniFuse Control for Linux'
 arch=('any')
@@ -9,9 +9,9 @@ url='https://github.com/srdiogo/minifuse-control'
 license=('MIT')
 makedepends=('python-build' 'python-installer' 'python-setuptools>=77' 'python-wheel')
 checkdepends=('pyside6>=6.11.2' 'desktop-file-utils' 'qt6-declarative')
-_commit=0d82e547879a4908578f9f1353219d3c9dc6d7a3
+_commit=c741b1885970f60ac9c11ad043cc377b9856635b
 source=("$pkgbase-$_commit.tar.gz::$url/archive/$_commit.tar.gz")
-sha256sums=('fac99e76618bc99dd93afa9209eb73f1489f22f7353260e9ee48ccbd8f1b65f0')
+sha256sums=('700d3867065f3c4851d7cae46e1406c07967817b8953d37903476d265ce71cd1')
 
 build() {
   cd "$pkgbase-$_commit"

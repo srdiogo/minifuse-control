@@ -1,5 +1,14 @@
 # Installation and removal
 
+## Backend prerequisite
+
+Install `minifuse-driver-dkms` and `mf-service` from the
+[backend workspace](https://github.com/srdiogo/mf-service), using headers for the
+running kernel. Follow its [installation guide](https://github.com/srdiogo/mf-service/blob/main/docs/INSTALL.md)
+for explicit driver activation, session access and optional login startup.
+`mf-core` is compiled into the service; it is not another process. The CLI is
+not required. Run `minifuse-doctor` before troubleshooting the GUI.
+
 ## Application or agent
 
 Use a dedicated virtual environment or a distribution package. Python 3.12–3.14
@@ -81,7 +90,10 @@ and archive checksum. The packages have separate ownership:
 The agent package is optional and current logo-button support remains disabled.
 Installing either package does not enable a unit, restore a preset or modify
 Omarchy. The module and active-session device permissions remain separate
-administrator-managed prerequisites from the mf-cli project.
+administrator-managed prerequisites from the mf-service workspace. The
+`minifuse-driver-dkms` package contains the transport and udev policy; the
+`mf-service` package includes the core library. The CLI is not required. See
+[backend setup on a new machine](https://github.com/srdiogo/mf-service/blob/main/docs/INSTALL.md).
 
 Build with `makepkg` as an ordinary user and review the resulting package file
 lists before installing through the system package manager. These are preview
