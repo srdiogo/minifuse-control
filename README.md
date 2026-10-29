@@ -9,6 +9,12 @@ with an optional, separately usable desktop activation agent. It connects to
 source membership, configured levels/pan, mute/solo, host presets and operation
 recovery. Building/testing does not install startup entries or change hardware.
 
+![MiniFuse Control mixer with a separate master, input modes and output routing](preview.png)
+
+*Qt capture of the installed application using a recorded MiniFuse 4 readback.
+Live meter samples are not replayed in this documentation image. The application
+follows the system palette; this capture illustrates a dark palette.*
+
 ## Run
 
 Requires Linux, Python 3.12–3.14, PySide6 6.11.2 and the service revision pinned
