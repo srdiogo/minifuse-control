@@ -1,8 +1,8 @@
 # Contributing
 
 This repository owns the Qt application and optional desktop activation policy.
-Use [mf-service](https://github.com/srdiogo/mf-service) for API and coordination
-changes, and [mf-core](https://github.com/srdiogo/mf-cli) for device protocol work.
+Use the [mf-service workspace](https://github.com/srdiogo/mf-service) for API,
+coordination and device protocol changes; it contains the shared `mf-core` crate.
 Omarchy integration is optional and must not become a standalone-GUI requirement.
 
 Use purpose-based branches and English source, documentation and commit messages.
