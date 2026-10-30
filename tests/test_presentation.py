@@ -7,6 +7,7 @@ import test_application as application
 from test_application import APP
 from PySide6.QtCore import QObject, QPoint, QPointF, Qt, QUrl
 from PySide6.QtQml import QQmlApplicationEngine, QQmlComponent, QQmlEngine
+from PySide6.QtGui import QFont
 from PySide6.QtQuick import QQuickItem
 from PySide6.QtTest import QTest
 
@@ -160,25 +161,29 @@ Window {
         window = engine.rootObjects()[0]
         try:
             page = window.findChild(QObject, "mixerPage")
-            for size in ((840, 640), (1280, 820), (960, 1056)):
-                window.setWidth(size[0])
-                window.setHeight(size[1])
-                for index in range(3):
-                    page.setProperty("selected", index)
-                    QTest.qWait(30)
-                    viewport = window.findChild(QQuickItem, "stripViewport")
-                    top = viewport.mapToScene(QPointF()).y()
-                    bottom = top + viewport.height()
-                    for name in ("masterControl", "sourceLevel-analog1"):
-                        control = visual(window.contentItem(), name)
-                        for part in ("levelSlider", "levelEntry"):
-                            item = visual(control, part)
-                            point = item.mapToScene(QPointF())
-                            self.assertGreaterEqual(point.y(), top)
-                            self.assertLessEqual(point.y() + item.height(), bottom)
-                    master = visual(window.contentItem(), "masterStrip")
-                    right = master.mapToScene(QPointF(master.width(), 0)).x()
-                    self.assertLessEqual(right, window.width())
+            larger_font = QFont(APP.font())
+            larger_font.setPointSize(24)
+            for font in (QFont(APP.font()), larger_font):
+                window.setProperty("font", font)
+                for size in ((840, 640), (1280, 820), (960, 1056)):
+                    window.setWidth(size[0])
+                    window.setHeight(size[1])
+                    for index in range(3):
+                        page.setProperty("selected", index)
+                        QTest.qWait(30)
+                        viewport = window.findChild(QQuickItem, "stripViewport")
+                        top = viewport.mapToScene(QPointF()).y()
+                        bottom = top + viewport.height()
+                        for name in ("masterControl", "sourceLevel-analog1"):
+                            control = visual(window.contentItem(), name)
+                            for part in ("levelSlider", "levelEntry"):
+                                item = visual(control, part)
+                                point = item.mapToScene(QPointF())
+                                self.assertGreaterEqual(point.y(), top)
+                                self.assertLessEqual(point.y() + item.height(), bottom)
+                        master = visual(window.contentItem(), "masterStrip")
+                        right = master.mapToScene(QPointF(master.width(), 0)).x()
+                        self.assertLessEqual(right, window.width())
             self.assertEqual(fixture.client.requests, [])
         finally:
             window.close()

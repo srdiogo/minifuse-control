@@ -1,7 +1,7 @@
 # Maintainer: Diogo de Medeiros <sr.diogo@gmail.com>
 pkgbase=minifuse-control
 pkgname=('minifuse-control-common' 'minifuse-control' 'minifuse-desktop-agent')
-pkgver=0.1.0.r8.g0d82e54
+pkgver=0.1.0.r19.g2481510
 pkgrel=1
 pkgdesc='MiniFuse Control for Linux'
 arch=('any')
@@ -9,9 +9,9 @@ url='https://github.com/srdiogo/minifuse-control'
 license=('MIT')
 makedepends=('python-build' 'python-installer' 'python-setuptools>=77' 'python-wheel')
 checkdepends=('pyside6>=6.11.2' 'desktop-file-utils' 'qt6-declarative')
-_commit=0d82e547879a4908578f9f1353219d3c9dc6d7a3
+_commit=24815101f689b909f5228074395ecb5dd671450b
 source=("$pkgbase-$_commit.tar.gz::$url/archive/$_commit.tar.gz")
-sha256sums=('fac99e76618bc99dd93afa9209eb73f1489f22f7353260e9ee48ccbd8f1b65f0')
+sha256sums=('4f040e1be5c94197e5bd436c7b30dd1d74be778376af426a8e114c8804fdb59a')
 
 build() {
   cd "$pkgbase-$_commit"
@@ -36,7 +36,9 @@ _license() {
 
 package_minifuse-control-common() {
   pkgdesc='Shared Python framing and preferences for MiniFuse applications'
-  depends=('python>=3.12')
+  local python_min python_max
+  read -r python_min python_max < <(python -c 'import sys; major, minor = sys.version_info[:2]; print(f"{major}.{minor} {major}.{minor + 1}")')
+  depends=("python>=$python_min" "python<$python_max")
   local site="$(_site)" module
   install -dm755 "$pkgdir$site/minifuse_control"
   for module in __init__ preferences wire; do
