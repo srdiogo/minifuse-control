@@ -39,14 +39,22 @@ jobs:
     steps:
       - run: pacman -Syu --noconfirm base-devel git python-build python-installer python-setuptools python-wheel pyside6 desktop-file-utils qt6-declarative mesa
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Build split packages as an unprivileged user
         run: |
           useradd --create-home builder
           install -d -o builder -g builder /tmp/package
-          cp packaging/arch/PKGBUILD /tmp/package/PKGBUILD
-          chown builder:builder /tmp/package/PKGBUILD
-          runuser -u builder -- sh -c 'cd /tmp/package && makepkg --cleanbuild --noconfirm'
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python tools/prepare_arch_package.py --output /tmp/package/export
+          chown -R builder:builder /tmp/package/export
+          runuser -u builder -- sh -c 'cd /tmp/package/export && sha256sum -c SHA256SUMS && makepkg --cleanbuild --noconfirm'
       - uses: actions/upload-artifact@v4
         with:
           name: minifuse-control-arch-preview
-          path: /tmp/package/*.pkg.tar.zst
+          path: |
+            /tmp/package/export/*.pkg.tar.zst
+            /tmp/package/export/PKGBUILD
+            /tmp/package/export/source-lock.json
+            /tmp/package/export/SHA256SUMS

@@ -23,3 +23,11 @@ the backend compares the same fixture to its implemented model catalog.
 Run `python -m unittest discover -s tests -v` and QML linting with the GUI extra.
 See the backend's [hardware checklist](https://github.com/srdiogo/minifuse-backend/blob/feature/model-controls/docs/models/TESTING.md)
 for read-only capture and deliberate switch acceptance.
+
+For an Arch test package built from this exact checkout, commit reviewed changes
+and run `python tools/prepare_arch_package.py --output dist/arch`. Verify its
+`SHA256SUMS`, then run `makepkg --cleanbuild` inside that directory. The export
+records the complete commit, generates a checksummed local source archive and
+refuses dirty/untracked changes or a nonempty output directory. The normal
+published recipe remains pinned to the installation preview; it is not the test
+recipe. CI exports the PR head for its Arch build.
