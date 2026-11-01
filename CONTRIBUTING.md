@@ -1,7 +1,7 @@
 # Contributing
 
 This repository owns the Qt application and optional desktop activation policy.
-Use the [mf-service workspace](https://github.com/srdiogo/mf-service) for API,
+Use the [MiniFuse Backend workspace](https://github.com/srdiogo/minifuse-backend) for API,
 coordination and device protocol changes; it contains the shared `mf-core` crate.
 Omarchy integration is optional and must not become a standalone-GUI requirement.
 
@@ -19,3 +19,14 @@ agent, entrypoints, bundled resources and removal. It never starts integration.
 Keep meter samples separate from configured gains and edits. Unsupported model
 features must remain unavailable. Firmware modification, effects, device-storage
 writes and automatic restore/startup are outside this application's scope.
+
+## Community reports and distribution work
+
+Use [support guidance](SUPPORT.md) and the issue forms for bugs, installation
+help, compatibility reports and feature requests. Share exact versions and the
+scope actually tested. Preserve private hardware/user data and existing credits.
+
+Distribution packaging and coordinated previews follow the backend's
+[roadmap](https://github.com/srdiogo/minifuse-backend/blob/main/docs/DISTRIBUTION.md)
+and [release guide](https://github.com/srdiogo/minifuse-backend/blob/main/docs/RELEASING.md).
+Build success alone does not establish support for a new distribution or model.

@@ -1,90 +1,104 @@
-# MiniFuse Control for Linux
+# MiniFuse Control
 
-A standalone Qt Quick application for the MiniFuse Linux control platform,
-with an optional, separately usable desktop activation agent. It connects to
-[mf-service](https://github.com/srdiogo/mf-service); all device semantics, verification and recovery remain in
-`mf-core`. Omarchy is optional.
+**Control your Arturia MiniFuse hardware mixer on Linux. Live meters, routing, input controls and presets.**
 
-**Status: development preview with bounded MiniFuse 4 hardware validation.** The application includes all three MF4 mixer views, routes,
-source membership, configured levels/pan, mute/solo, host presets and operation
-recovery. Building/testing does not install startup entries or change hardware.
+[![Build and tests](https://github.com/srdiogo/minifuse-control/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/srdiogo/minifuse-control/actions/workflows/ci.yml)
 
-![MiniFuse Control mixer with a separate master, input modes and output routing](preview.png)
+Part of **MiniFuse for Linux**, an independent community project. The application
+reads your interface when it connects and follows hardware changes. Drag a
+fader, change a route or click a supported input control to apply it directly.
 
-*Qt capture of the installed application using a recorded MiniFuse 4 readback.
-Live meter samples are not replayed in this documentation image. The application
-follows the system palette; this capture illustrates a dark palette.*
+![MiniFuse Control showing channel strips, input controls, routing and a separate mix master](preview.png)
 
-## Run
+*Installed application using a recorded MiniFuse 4 readback. The application
+follows the system palette; this capture uses a dark palette. Live meter samples
+are not replayed in this documentation image.*
 
-Requires Linux, Python 3.12–3.14, PySide6 6.11.2 and the service revision pinned
-in [contract.lock.json](contract.lock.json). Normal device control also requires
-the matching administrator-installed MiniFuse kernel module and existing user
-access. The GUI does not install or replace those components.
+[Install](#install) · [Compatibility](#compatibility) · [Get help](SUPPORT.md) · [Contribute](CONTRIBUTING.md)
 
-```sh
-python3 -m venv .venv
-.venv/bin/pip install '.[gui]'
-.venv/bin/minifuse-control
-```
+## Your mixer, on Linux
 
-The mixer uses aligned vertical channel strips, a separate master and compact
-input-mode buttons, sharing a visual language with the optional Omarchy panel.
-Colors follow the system Qt palette. Short windows use a compact layout; source
-channels scroll horizontally while the master remains visible. Mix sources are
-managed from **Mix sources…**, and routes remain beside the destination heading.
+- Three MiniFuse 4 mixer views with vertical faders and a separate master.
+- Source levels, pan, mute/solo, mix membership and destination routing.
+- INST1, INST2 and shared +48 V controls with confirmed state, including physical button changes.
+- Calibrated source and post-master mix meters.
+- Preset comparison and deliberate restore from files on your computer.
+- System colors, keyboard controls and a layout that adapts to smaller windows.
 
-The application reads state on connection and follows service events. Faders
-and pan apply while moving, with bounded coalescing and a final release value.
-Numeric levels apply on Enter; mute/solo, routes and membership apply on click.
-Manual refresh is under Device and desktop → Show local diagnostics. Preset
-restore keeps a comparison and an explicit Apply step.
+The application uses [MiniFuse Backend](https://github.com/srdiogo/minifuse-backend)
+for hardware control. Omarchy is optional; its
+[compact panel](https://github.com/srdiogo/omarchy-minifuse) is a separate frontend.
 
-The backend currently exposes the validated MF4 mixer only. MF1/MF2 keep their
-established CLI controls; this app does not infer MF4 layouts for them.
-MF4 INST1, INST2 and shared +48 V use confirmed readback, including physical
-button changes. Clicking applies a verified change when the active module
-advertises input-switch support; an older module provides read-only indicators.
-Calibrated source and post-master mix peaks appear alongside the faders in dBFS.
-They use device C2 readback, with a 500 ms freshness timeout. Mix peaks precede
-destination routing and can differ from physical outputs on USB direct.
-Logo-button activation remains unavailable. A configured gain is not a signal
-meter. Effects, firmware/device-storage writers and system audio routing
-changes are outside scope.
+## Install
 
-## Development and validation
+**Arch Linux x86_64:** download the archive and checksum from the
+[complete installation preview](https://github.com/srdiogo/minifuse-backend/releases/tag/installer-preview-2026-10-29).
+Verify and extract it, then select the application profile:
 
 ```sh
-.venv/bin/pip install '.[gui,dev]'
-.venv/bin/ruff check src tests --select E4,E7,E9,F
-.venv/bin/ruff format --check src tests
-QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME= QT_QUICK_CONTROLS_STYLE=Basic QT_QUICK_BACKEND=software .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/pyside6-qmllint src/minifuse_control/qml/*.qml
-.venv/bin/pip wheel --no-deps . -w dist
+sha256sum -c minifuse-linux-installer-2026-10-29.tar.gz.sha256
+tar -xzf minifuse-linux-installer-2026-10-29.tar.gz
+cd minifuse-linux-installer-2026-10-29
+./install.sh --profile gui
 ```
 
-Tests use the canonical real-service contract and deterministic local socket
-peers. There is no fake device mode in the normal application. Bounded hardware integration has been exercised on one MF4. Broader hardware,
-Wayland focus/scaling and clean-machine package acceptance remain separate gates.
+Run as your normal graphical-session user. This installs the driver, service
+and application without the Omarchy panel. Setup displays its plan before
+confirmation, prepares matching kernel headers and configures boot/login
+startup. The published GUI packages require Python 3.14.
 
-## Documentation
+On Omarchy, use `./install.sh --profile full` to include the panel and floating
+application-window setup. For existing installations, custom kernels, startup
+options, updates or removal, read the
+[installer guide](https://github.com/srdiogo/minifuse-backend/blob/main/distribution/INSTALLER.md)
+and [application installation guide](docs/INSTALL.md).
 
-- [Application architecture and interaction](docs/APPLICATION.md)
-- [Desktop agent and physical-button activation](docs/DESKTOP.md)
-- [Implementation and validation](docs/IMPLEMENTATION.md)
-- [Installation, optional integration and removal](docs/INSTALL.md)
-- [Contribution workflow](CONTRIBUTING.md)
+Ubuntu, Debian and Fedora packages are planned. The current complete installer
+supports Arch Linux x86_64; a Python wheel alone does not install the required
+driver or service. See the
+[distribution roadmap](https://github.com/srdiogo/minifuse-backend/blob/main/docs/DISTRIBUTION.md).
 
-The canonical [protocol](https://github.com/srdiogo/mf-service/blob/main/docs/IPC.md)
-and [continuous interaction contract](https://github.com/srdiogo/mf-service/blob/main/docs/LIVE_CONTROLS.md)
-are maintained by the service. Client fixture copies are pinned
-by source commit and SHA-256 rather than maintaining a separate API.
+## Compatibility
 
-The Python distribution has no unconditional Qt dependency. Install the `gui`
-extra for the application; the standard-library desktop agent can be packaged
-without it. The default activation preference is disabled. Preferences never
-install startup or enable an unvalidated hardware event.
+| Area | Current status |
+|---|---|
+| MiniFuse 4 | Bounded hardware validation of mixer, routes, input controls and meters |
+| MiniFuse 1 / 2 | Full application controls unavailable |
+| Desktop | Standalone Qt Quick application; Omarchy is optional |
+| Application runtime | Python 3.12–3.14; source GUI extra pins PySide6 6.11.2 |
+| Native packages | Arch Linux x86_64; GUI checked with Qt 6.11.2 and 6.12.0 |
 
-New material is [MIT licensed](LICENSE). Design/research comes from srdiogo's
+**Development preview.** Physical-logo activation is unavailable. Effects,
+firmware changes and device-storage writes are outside scope. Unsupported
+controls remain unavailable rather than using a guessed model layout.
+Meter peaks are measured before destination routing and may differ from the
+physical outputs when USB direct routing is selected.
+
+## First launch
+
+Open **MiniFuse Control** from your application launcher. The app reads the
+device before enabling controls. If the service is unavailable, use
+**Device and desktop** for local diagnostics; `minifuse-doctor` also checks the
+backend without changing device settings.
+
+Faders and pan apply during movement, and numeric levels apply on Enter.
+Preset restore keeps a comparison and an explicit **Apply** step. Reconnecting
+reads fresh state; it does not restore a preset automatically.
+
+## Documentation and community
+
+- [Installation, updates and removal](docs/INSTALL.md)
+- [Support and troubleshooting](SUPPORT.md)
+- [Development and tests](docs/DEVELOPMENT.md)
+- [Application architecture](docs/APPLICATION.md) and [validation status](docs/IMPLEMENTATION.md)
+- [Optional desktop agent](docs/DESKTOP.md); physical-logo events remain unavailable
+- [Changelog](CHANGELOG.md) and [contributing](CONTRIBUTING.md)
+- [MiniFuse Backend](https://github.com/srdiogo/minifuse-backend) and [MiniFuse for Omarchy](https://github.com/srdiogo/omarchy-minifuse)
+
+## Credits and license
+
+This is an independent community project, not an official Arturia product.
+New material is [MIT licensed](LICENSE). Design and research come from srdiogo's
 MiniFuse CC work and the `mf-cli` evidence record, which retains upstream
-contributor credits. This is an independent community project.
+contributor credits. Protocol and hardware attribution are preserved in the
+[backend evidence record](https://github.com/srdiogo/minifuse-backend/blob/main/docs/mf4/evidence.md).
