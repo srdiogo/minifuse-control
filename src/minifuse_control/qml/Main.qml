@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -32,7 +33,7 @@ ApplicationWindow {
                 Layout.preferredWidth: 6
                 Layout.preferredHeight: 6
                 radius: 3
-                color: window.controller.canWrite ? window.palette.highlight : window.palette.mid
+                color: (window.controller.canWrite || window.controller.canWriteInputs) ? window.palette.highlight : window.palette.mid
             }
             Label {
                 text: window.controller.status
@@ -51,8 +52,8 @@ ApplicationWindow {
             Layout.preferredWidth: 470
             spacing: 4
             background: null
-            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Mixer and routing") }
-            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Presets") }
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: window.controller.panelLayout === "mf4_mixer" ? qsTr("Mixer and routing") : qsTr("Inputs and monitoring") }
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Presets"); enabled: window.controller.panelLayout === "mf4_mixer" }
             NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Device and desktop") }
         }
         StackLayout {
@@ -63,7 +64,13 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             currentIndex: tabs.currentIndex
-            MixerPage { controller: window.controller; compact: window.compact }
+            Loader {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                sourceComponent: window.controller.panelLayout === "mf4_mixer" ? mixerComponent : modelComponent
+                Component { id: mixerComponent; MixerPage { controller: window.controller; compact: window.compact } }
+                Component { id: modelComponent; ModelPage { controller: window.controller; compact: window.compact } }
+            }
             PresetsPage { controller: window.controller }
             DevicePage { controller: window.controller }
         }
@@ -93,7 +100,7 @@ ApplicationWindow {
                     contentWidth: availableWidth
                     TextArea {
                         objectName: "feedbackText"
-                        text: window.controller.message || (window.controller.liveActive ? qsTr("Adjusting…") : window.controller.busy ? qsTr("Waiting for device verification…") : window.controller.canWrite ? qsTr("Ready · Changes apply automatically") : window.controller.status)
+                        text: window.controller.message || (window.controller.liveActive ? qsTr("Adjusting…") : window.controller.busy ? qsTr("Waiting for device verification…") : (window.controller.canWrite || window.controller.canWriteInputs) ? qsTr("Ready · Changes apply automatically") : window.controller.status)
                         readOnly: true
                         selectByMouse: true
                         wrapMode: TextEdit.Wrap
@@ -104,8 +111,15 @@ ApplicationWindow {
                         Accessible.name: text
                     }
                 }
-                Button { text: qsTr("Refresh and acknowledge"); visible: window.controller.uncertain; enabled: window.controller.online && window.controller.mixes.length > 0; onClicked: window.controller.acknowledge() }
+                Button { text: qsTr("Refresh and acknowledge"); visible: window.controller.uncertain; enabled: window.controller.online && !!window.controller.revision; onClicked: window.controller.acknowledge() }
             }
+        }
+    }
+    Connections {
+        target: window.controller
+        function onChanged() {
+            if (window.controller.panelLayout !== "mf4_mixer" && tabs.currentIndex === 1)
+                tabs.currentIndex = 0
         }
     }
     onClosing: { window.controller.cancelControl(); window.controller.discardEdits() }

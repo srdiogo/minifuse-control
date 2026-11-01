@@ -58,12 +58,25 @@ supports Arch Linux x86_64; a Python wheel alone does not install the required
 driver or service. See the
 [distribution roadmap](https://github.com/srdiogo/minifuse-backend/blob/main/docs/DISTRIBUTION.md).
 
+## Model-support testing
+
+This test revision recognizes MiniFuse 1, MiniFuse 2 and MiniFuse 2 OTG and selects
+an input/monitoring layout for each. The backend keeps these models disabled by
+default until hardware acceptance. MF1 has no INST2; initialization USB modes
+have no audio controls. MF4 keeps its existing mixer and meters. The installer
+preview linked above predates these additions.
+
+We are looking for owners of MF1, MF2 and MF2 OTG to help with LED checks,
+readbacks and minimal Windows USB captures. Follow the backend's
+[hardware acceptance guide](https://github.com/srdiogo/minifuse-backend/blob/feature/model-controls/docs/models/TESTING.md).
+Static analysis and synthetic frontend fixtures are not physical validation.
+
 ## Compatibility
 
 | Area | Current status |
 |---|---|
 | MiniFuse 4 | Bounded hardware validation of mixer, routes, input controls and meters |
-| MiniFuse 1 / 2 | Full application controls unavailable |
+| MiniFuse 1 / 2 / 2 OTG | Automatic model-specific layouts; experimental basic controls require a matching opt-in backend and hardware acceptance |
 | Desktop | Standalone Qt Quick application; Omarchy is optional |
 | Application runtime | Python 3.12–3.14; source GUI extra pins PySide6 6.11.2 |
 | Native packages | Arch Linux x86_64; GUI checked with Qt 6.11.2 and 6.12.0 |

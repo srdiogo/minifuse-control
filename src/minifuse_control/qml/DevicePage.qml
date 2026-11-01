@@ -21,10 +21,10 @@ ScrollView {
                     anchors.fill: parent
                     spacing: 12
                     Label { text: qsTr("DEVICE SUPPORT"); font.pixelSize: 10; font.letterSpacing: 1; opacity: 0.55 }
-                    Label { text: qsTr("MiniFuse 4"); font.pixelSize: 18; font.bold: true }
-                    Label { text: qsTr("Mixer, output routes, host presets, INST and shared +48 V follow confirmed device state. Input writes and signal meters require matching module features."); wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    Label { text: qsTr("Mix meters follow master gain, before routing. Direct USB can bypass that mix. Input trims are read-only."); wrapMode: Text.Wrap; Layout.fillWidth: true; opacity: 0.65; font.pixelSize: 12 }
-                    Label { text: qsTr("MiniFuse 1 and 2 retain their established CLI controls. This application does not infer their mixer layouts."); wrapMode: Text.Wrap; Layout.fillWidth: true; opacity: 0.65; font.pixelSize: 12 }
+                    Label { text: root.controller.modelName; font.pixelSize: 18; font.bold: true }
+                    Label { visible: root.controller.panelLayout === "mf4_mixer"; text: qsTr("Mixer, output routes, host presets, INST and shared +48 V follow confirmed device state. Input writes and signal meters require matching module features."); wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Label { visible: root.controller.panelLayout === "mf4_mixer"; text: qsTr("Mix meters follow master gain, before routing. Direct USB can bypass that mix. Input trims are read-only."); wrapMode: Text.Wrap; Layout.fillWidth: true; opacity: 0.65; font.pixelSize: 12 }
+                    Label { text: qsTr("The connected model selects its own control layout. Functions require confirmed state and model-specific backend support."); wrapMode: Text.Wrap; Layout.fillWidth: true; opacity: 0.65; font.pixelSize: 12 }
                 }
             }
             Panel {
