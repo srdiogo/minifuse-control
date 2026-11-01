@@ -1,17 +1,21 @@
 """Bind test packages to reviewed source instead of the older release recipe."""
 
 import hashlib
+import importlib.util
 import io
 from pathlib import Path
 import subprocess
-import sys
 import tarfile
 import tempfile
 import unittest
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT / "tools"))
-from prepare_arch_package import export
+SPEC = importlib.util.spec_from_file_location(
+    "prepare_arch_package", PROJECT / "tools/prepare_arch_package.py"
+)
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+export = MODULE.export
 
 
 class SourceKitTests(unittest.TestCase):
