@@ -52,8 +52,8 @@ ApplicationWindow {
             Layout.preferredWidth: 470
             spacing: 4
             background: null
-            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: window.controller.panelLayout === "mf4_mixer" ? qsTr("Mixer and routing") : qsTr("Inputs and monitoring") }
-            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Presets"); enabled: window.controller.panelLayout === "mf4_mixer" }
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: window.controller.panelLayout === "mf4_mixer" ? qsTr("Mixer and routing") : window.controller.panelLayout === "loopback_mixer" ? qsTr("Loopback mixer") : qsTr("Inputs and monitoring") }
+            NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Presets"); enabled: !!window.controller.capabilities.host_snapshots }
             NavigationTab { implicitHeight: window.compact ? 32 : 36; text: qsTr("Device and desktop") }
         }
         StackLayout {
@@ -118,7 +118,7 @@ ApplicationWindow {
     Connections {
         target: window.controller
         function onChanged() {
-            if (window.controller.panelLayout !== "mf4_mixer" && tabs.currentIndex === 1)
+            if (!window.controller.capabilities.host_snapshots && tabs.currentIndex === 1)
                 tabs.currentIndex = 0
         }
     }

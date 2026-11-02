@@ -28,6 +28,7 @@ def main():
             "qml/Panel.qml",
             "qml/DevicePage.qml",
             "qml/ModelPage.qml",
+            "qml/LoopbackPage.qml",
             "assets/minifuse-control.svg",
         ):
             assert "minifuse_control/" + suffix in names

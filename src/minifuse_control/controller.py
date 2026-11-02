@@ -68,6 +68,14 @@ class Controller(QObject):
             and not self._pending
             and self._device.get("capabilities", {}).get("mixer")
             and ("profile" not in self._device or bool(self.modelProfile))
+            and (
+                self.panelLayout != "loopback_mixer"
+                or (
+                    self.firmwareInfo.get("loopback_compatible") is True
+                    and self._state.get("state", {}).get("firmware")
+                    == self.firmwareInfo
+                )
+            )
         )
 
     @Property("QVariantMap", notify=changed)
@@ -111,7 +119,25 @@ class Controller(QObject):
             if profile["id"] == "mf4"
             else "inputs_and_monitoring"
         )
-        return profile if profile.get("layout") == expected else {}
+        valid = profile.get("layout") == expected or (
+            mode == "control"
+            and profile["id"] != "mf4"
+            and profile.get("layout") == "loopback_mixer"
+        )
+        return profile if valid else {}
+
+    @Property("QVariantMap", notify=changed)
+    def firmwareInfo(self):
+        value = (self._device or {}).get("firmware", {})
+        return value if isinstance(value, dict) else {}
+
+    @Property("QVariantMap", notify=changed)
+    def loopbackRouting(self):
+        return self._state.get("state", {}).get("loopback", {})
+
+    @Property("QVariantMap", notify=changed)
+    def otgRouting(self):
+        return self._state.get("state", {}).get("otg") or {}
 
     @Property(str, notify=changed)
     def modelName(self):
@@ -227,8 +253,43 @@ class Controller(QObject):
                 and -200 <= value <= 0
             )
 
+        if data.get("meter_layout") == "minifuse-basic-c2-v1":
+            inputs = data.get("inputs_dbfs")
+            loopback = data.get("loopback_dbfs")
+            otg = data.get("otg_dbfs")
+            count = 1 if self.modelProfile.get("id") == "mf1" else 2
+
+            def pair(value):
+                return (
+                    isinstance(value, list)
+                    and len(value) == 2
+                    and all(valid(v) for v in value)
+                )
+
+            accepted = (
+                self.panelLayout == "loopback_mixer"
+                and data.get("available") is True
+                and self.capabilities.get("signal_meters") is True
+                and isinstance(inputs, list)
+                and len(inputs) == count
+                and all(valid(v) for v in inputs)
+                and pair(loopback)
+                and (
+                    pair(otg)
+                    if self.modelProfile.get("id") == "mf2_otg"
+                    else otg is None
+                )
+            )
+            if not accepted:
+                self._clear_meters()
+                return
+            self._meters = data
+            self._meter_timeout.start()
+            self.metersChanged.emit()
+            return
         if (
-            data.get("available") is not True
+            self.panelLayout != "mf4_mixer"
+            or data.get("available") is not True
             or not self.capabilities.get("signal_meters")
             or not isinstance(sources, list)
             or len(sources) != 10
@@ -291,6 +352,14 @@ class Controller(QObject):
                 }
             )
 
+        for group in ("loopback", "otg"):
+            for field, after in (state.get(group) or {}).items():
+                add(
+                    group + " · " + field,
+                    field,
+                    after,
+                    (current.get(group) or {}).get(field),
+                )
         for mix in state.get("mixes", []):
             previous = next(
                 (m for m in current.get("mixes", []) if m["mix"] == mix["mix"]), {}
@@ -311,14 +380,21 @@ class Controller(QObject):
                     ),
                     {},
                 )
-                for field, label in (
+                fields = [
                     ("derived_level_db", "Level dB"),
                     ("derived_pan", "Pan"),
                     ("mute", "Mute"),
                     ("solo", "Solo"),
                     ("mono_included", "Mono source included"),
                     ("stereo_pair_included", "Stereo pair included"),
-                ):
+                ]
+                if state.get("layout") == "minifuse-basic-b2-v1":
+                    fields += [
+                        ("db_left", "Left dB"),
+                        ("db_right", "Right dB"),
+                        ("mute_mixed", "Mixed mute"),
+                    ]
+                for field, label in fields:
                     add(
                         f"{mix['mix']} · {channel['channel']} · {label}",
                         field,

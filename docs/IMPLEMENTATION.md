@@ -55,8 +55,9 @@ snapshots enter public fixtures.
 The complete mapped MF4 feature set, preset workflows, error/reconnect states,
 accessibility and normal launcher must pass before application release.
 Optional button support remains disabled until its evidence gate passes.
-MF4 meters have calibrated readback with documented coverage. Complete MF1/MF2
-control and native device-save confirmation remain unavailable.
+MF4 meters have calibrated readback with documented coverage. MF1/MF2/OTG native loopback has experimental software coverage with model-specific
+firmware gates; physical acceptance is still pending. Windows SLS processing and
+native device-save confirmation remain unavailable.
 
 Document dependencies, service/API compatibility, package installation/update/
 removal, optional startup and troubleshooting. The application must not install
@@ -72,7 +73,9 @@ strict framing and a real QLocalSocket peer. A separate-process test verifies
 single-instance activation. Agent tests cover validated capability/generation,
 one target, deduplication and no activation from baselines.
 
-Local validation uses Python 3.14.7, PySide6 6.11.2 and Qt 6.11.2. CI tests
+The original application baseline used Python 3.14.7, PySide6 6.11.2 and Qt
+6.11.2. Native model layouts were additionally checked with Qt 6.12.0; see
+[model coverage](MODELS.md). CI tests
 Python 3.12/3.14 with Basic and Fusion styles. Hosted results must be checked
 on the published source revision. No
 production service/module, session startup or global desktop setting is changed

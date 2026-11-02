@@ -31,7 +31,7 @@ ColumnLayout {
                         model: root.controller.presets
                         delegate: Button {
                             required property var modelData
-                            text: modelData.name
+                            text: modelData.name + " · " + (modelData.model || "MiniFuse")
                             Layout.fillWidth: true
                             enabled: root.controller.online
                             onClicked: root.controller.inspectPreset(modelData.preset_id)
@@ -53,7 +53,7 @@ ColumnLayout {
                     wrapMode: Text.Wrap
                     text: root.controller.preview.summary ? qsTr("Changes in this preview: ") + root.controller.previewRows.length : qsTr("Select or import a snapshot. Inspection does not write to the interface.")
                 }
-                ComboBox { id: scope; model: [qsTr("All mixes"), "out12", "out34", "loopback"]; Accessible.name: qsTr("Restore scope") }
+                ComboBox { id: scope; model: [qsTr("All supported mixes")].concat(root.controller.mixes.map(m => m.mix)); Accessible.name: qsTr("Restore scope") }
                 Flow {
                     Layout.fillWidth: true
                     spacing: 8
@@ -61,7 +61,7 @@ ColumnLayout {
                     Button { text: qsTr("Apply this preview"); enabled: root.controller.canWrite && !!root.controller.preview.plan_id; onClicked: root.controller.applyRestore() }
                     Button { text: qsTr("Export…"); enabled: Object.keys(root.controller.preview).length > 0; onClicked: exporting.open() }
                 }
-                Label { text: qsTr("Only selected mixer fields are restored. Removing a source mutes it and clears solo. Host presets do not confirm saving to device memory."); Layout.fillWidth: true; wrapMode: Text.Wrap; font.pixelSize: 11; opacity: 0.65 }
+                Label { text: root.controller.panelLayout === "loopback_mixer" ? qsTr("Presets restore this model’s mapped mixer and routing fields. INST, +48 V, direct monitoring and unknown fields are preserved. Presets are stored on this computer.") : qsTr("Only selected mixer fields are restored. Removing a source mutes it and clears solo. Host presets do not confirm saving to device memory."); Layout.fillWidth: true; wrapMode: Text.Wrap; font.pixelSize: 11; opacity: 0.65 }
                 ListView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
