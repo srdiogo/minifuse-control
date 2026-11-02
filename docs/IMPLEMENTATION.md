@@ -54,7 +54,7 @@ snapshots enter public fixtures.
 
 The complete mapped MF4 feature set, preset workflows, error/reconnect states,
 accessibility and normal launcher must pass before application release.
-Optional button support remains disabled until its evidence gate passes.
+Optional MF4 button support is enabled only when the backend confirms validated firmware and counter state. Other models remain disabled.
 MF4 meters have calibrated readback with documented coverage. MF1/MF2/OTG native loopback has experimental software coverage with model-specific
 firmware gates; physical acceptance is still pending. Windows SLS processing and
 native device-save confirmation remain unavailable.

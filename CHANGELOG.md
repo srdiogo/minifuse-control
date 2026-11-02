@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Show confirmed logo-button availability and exercise the optional desktop agent through the socket protocol.
+
 - Present MiniFuse Control as part of MiniFuse for Linux with a user-oriented README,
   compatibility table and direct installation guidance.
 - Add support routing, issue forms and contribution/release documentation.

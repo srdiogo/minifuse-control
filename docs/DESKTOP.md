@@ -58,12 +58,18 @@ not implicitly enable login startup or install the service/module.
 
 The official MF4 short/long-press behavior is documented in the
 [Arturia manual](https://dl.arturia.net/products/minifuse-4/manual/minifuse-4_Manual_1_0_0_EN.pdf).
-The local research's header-counter candidate is not a validated Linux input
-event. Confirm its actual host-visible signal and precise meaning before
-advertising button support. Preserve the native long-press Sleep behavior.
+Linux events are now validated for normal-mode MiniFuse 4 with USB firmware
+descriptor 1.0.1. The backend requires a confirmed counter, establishes a startup
+baseline, emits once per observed change and assigns IDs independent of the
+counter's 9-to-0 wrap. Other models/firmware remain unavailable. See the backend's
+[protocol evidence and limits](https://github.com/srdiogo/minifuse-backend/blob/feature/model-controls/docs/mf4/logo-button.md).
 
-Acceptance must cover short release once, repeated reads, repeated presses,
-counter wrap, initial nonzero baseline, reconnect, service/agent restart,
-long press and missing target. No startup or duplicate event may produce a
-spurious launch. Do not modify firmware, scan unknown controls or discard
-unknown header fields from transaction checks to implement this feature.
+The agent negotiates capability and subscribes to the validated event. It never
+launches from an initial read, reconnect or duplicate event ID. Sequence/epoch
+gaps force a new baseline. The application still owns single-instance activation;
+the service performs no launch or configuration write for a button event.
+
+Native long-press Sleep is unchanged and was not physically tested in this
+session. Button support must not be generalized to another model or firmware
+without its own evidence. No firmware modification or unknown control scan is
+needed for this feature.

@@ -84,7 +84,7 @@ See [model layouts and boundaries](docs/MODELS.md) for controls and limitations.
 | Application runtime | Python 3.12–3.14; source GUI extra pins PySide6 6.11.2 |
 | Native packages | Arch Linux x86_64; GUI checked with Qt 6.11.2 and 6.12.0 |
 
-**Development preview.** Physical-logo activation is unavailable. Effects,
+**Development preview.** Optional MF4 short-press logo activation requires a compatible backend, validated USB firmware descriptor 1.0.1 and the desktop agent. Effects,
 firmware changes and device-storage writes are outside scope. Unsupported
 controls remain unavailable rather than using a guessed model layout.
 MF4 meter peaks are measured before destination routing and may differ from the
@@ -108,7 +108,7 @@ reads fresh state; it does not restore a preset automatically.
 - [Support and troubleshooting](SUPPORT.md)
 - [Development and tests](docs/DEVELOPMENT.md)
 - [Application architecture](docs/APPLICATION.md) and [validation status](docs/IMPLEMENTATION.md)
-- [Optional desktop agent](docs/DESKTOP.md); physical-logo events remain unavailable
+- [Optional desktop agent](docs/DESKTOP.md) for validated MF4 short presses
 - [Changelog](CHANGELOG.md) and [contributing](CONTRIBUTING.md)
 - [MiniFuse Backend](https://github.com/srdiogo/minifuse-backend) and [MiniFuse for Omarchy](https://github.com/srdiogo/omarchy-minifuse)
 

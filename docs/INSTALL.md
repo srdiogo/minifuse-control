@@ -45,10 +45,11 @@ proprietary icon is required.
 
 ## Optional desktop activation
 
-The agent default is disabled; current backend button capability is unavailable.
-An activation preference does not enable unsupported events. Once the backend
-evidence gate passes, a user can select one target and separately opt into
-session startup. The user-unit template uses `/usr/bin/minifuse-desktop-agent`;
+The agent default is disabled. MF4 short-press events require a backend with
+validated USB firmware descriptor 1.0.1 support and confirmed device state.
+An activation preference does not enable unsupported events. Select one target
+in Device and desktop, then separately opt into session startup. The user-unit
+template uses `/usr/bin/minifuse-desktop-agent`;
 a local virtual environment needs a user override with its absolute ExecStart.
 Only then install/enable the reviewed user unit for the graphical session.
 Installing the application or plugin alone does not start the agent.
@@ -95,7 +96,7 @@ and archive checksum. The packages have separate ownership:
 - `minifuse-desktop-agent`: standard-library activation policy and optional
   user unit; depends on the common package and service, without Qt.
 
-The agent package is optional and current logo-button support remains disabled.
+The agent package is optional. Logo-button support is limited to the validated MF4 device/firmware; other models remain disabled.
 Installing either package does not enable a unit, restore a preset or modify
 Omarchy. The module and active-session device permissions remain separate
 administrator-managed prerequisites from the MiniFuse Backend workspace. The

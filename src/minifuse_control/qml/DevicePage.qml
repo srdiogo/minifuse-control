@@ -43,7 +43,9 @@ ScrollView {
                         Accessible.name: qsTr("Physical-button activation preference")
                         onActivated: root.controller.setActivationTarget(targets[currentIndex])
                     }
-                    Label { text: qsTr("Logo-button events remain unavailable. The optional agent requires a validated event and explicit session startup. This preference does not install startup entries or enable unsupported hardware."); wrapMode: Text.Wrap; Layout.fillWidth: true; opacity: 0.65; font.pixelSize: 12 }
+                    Label { text: root.controller.capabilities.control_panel_button === true
+                        ? qsTr("Short presses are supported on this device. Enable the optional desktop agent at login to open the selected target while this application is closed.")
+                        : qsTr("Logo-button events are unavailable for this device or firmware. The preference takes effect only when the backend confirms support."); wrapMode: Text.Wrap; Layout.fillWidth: true; opacity: 0.65; font.pixelSize: 12 }
                 }
             }
         }
