@@ -81,3 +81,21 @@ Native long-press Sleep is unchanged and was not physically tested in this
 session. Button support must not be generalized to another model or firmware
 without its own evidence. No firmware modification or unknown control scan is
 needed for this feature.
+
+## MF4 desktop acceptance, 2 November 2026
+
+On MiniFuse 4 USB firmware descriptor 1.0.1, the operator confirmed launch from
+a short press and one window after repeated presses. The backend supplied nine
+live events across two sessions. Starting from a nonzero counter produced no
+launch. The final application ran in its own systemd user unit; restarting the
+agent and presenting the application again preserved the same GUI process.
+It was floating on the tested Omarchy session. No device controls were changed
+by activation; the backend's complete-state comparison changed only counter
+byte 14. Other desktops retain their own focus policy.
+
+The final automated suite passed 45 tests with each Basic and Fusion style.
+This includes three presentations through the actual application entrypoint,
+idle-connection expiry, bounded agent socket negotiation, duplicate IDs,
+sequence/epoch gaps, capability loss, managed/direct launch choice and one
+notification for a failed target. Static evidence and physical scope are
+recorded in the backend's [button report](https://github.com/srdiogo/minifuse-backend/blob/feature/model-controls/docs/mf4/logo-button.md).
