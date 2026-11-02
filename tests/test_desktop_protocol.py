@@ -6,7 +6,7 @@ import socket
 import tempfile
 import threading
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from minifuse_control import desktop
 from minifuse_control.preferences import Preferences
@@ -136,3 +136,66 @@ class DesktopProtocolTests(unittest.TestCase):
         )
         self.assertEqual(launched, [])
         self.assertEqual(errors, [])
+
+
+class DesktopLaunchTests(unittest.TestCase):
+    def test_systemd_session_launch_uses_a_separate_unit_and_fixed_target(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "systemd").mkdir()
+            with socket.socket(socket.AF_UNIX) as manager:
+                manager.bind(str(root / "systemd/private"))
+                with (
+                    patch.dict(desktop.os.environ, {"XDG_RUNTIME_DIR": str(root)}),
+                    patch.object(
+                        desktop.shutil,
+                        "which",
+                        side_effect=lambda name: {
+                            "systemd-run": "/usr/bin/systemd-run",
+                            "minifuse-control": "/opt/minifuse/bin/minifuse-control",
+                        }.get(name),
+                    ),
+                    patch.object(desktop.subprocess, "run") as launch,
+                    patch.object(desktop.subprocess, "Popen") as direct,
+                ):
+                    desktop.launch_target("application")
+                direct.assert_not_called()
+                command = launch.call_args.args[0]
+                self.assertEqual(command[0], "/usr/bin/systemd-run")
+                self.assertIn("--user", command)
+                self.assertIn("--service-type=exec", command)
+                self.assertEqual(
+                    command[-2:], ["--", "/opt/minifuse/bin/minifuse-control"]
+                )
+                self.assertTrue(launch.call_args.kwargs["check"])
+
+    def test_without_a_session_manager_the_direct_launcher_remains_available(self):
+        process = Mock()
+        process.wait.return_value = 0
+        with (
+            patch.dict(desktop.os.environ, {"XDG_RUNTIME_DIR": ""}),
+            patch.object(desktop.shutil, "which", return_value=None),
+            patch.object(desktop.subprocess, "Popen", return_value=process) as launch,
+            patch.object(desktop.subprocess, "run") as managed,
+        ):
+            desktop.launch_target("application")
+        managed.assert_not_called()
+        self.assertEqual(launch.call_args.args[0], ["minifuse-control"])
+        self.assertTrue(launch.call_args.kwargs["start_new_session"])
+
+    def test_failed_launch_is_reported_once_without_retrying_a_duplicate_event(self):
+        launch = Mock(side_effect=OSError("target unavailable"))
+        notify = Mock()
+        policy = desktop.ActivationPolicy(launch, notify)
+        devices = [
+            {
+                "device_id": "mf4",
+                "generation": "connection-1",
+                "capabilities": {"control_panel_button": True},
+            }
+        ]
+        event = DesktopProtocolTests.event(1, "failed-launch")
+        self.assertTrue(policy.handle(event, devices, "application"))
+        self.assertFalse(policy.handle(event, devices, "application"))
+        launch.assert_called_once_with("application")
+        notify.assert_called_once()

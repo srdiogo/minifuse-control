@@ -132,7 +132,12 @@ def main():
             peer.disconnected.connect(
                 lambda peer=peer: (peers.remove(peer), peer.deleteLater())
             )
-            QTimer.singleShot(1000, peer.disconnectFromServer)
+            # Destroy the timeout with its socket; a completed activation may
+            # delete the peer before the timeout expires.
+            timeout = QTimer(peer)
+            timeout.setSingleShot(True)
+            timeout.timeout.connect(lambda peer=peer: peer.disconnectFromServer())
+            timeout.start(1000)
 
     server.newConnection.connect(connected)
     app.aboutToQuit.connect(client.close)

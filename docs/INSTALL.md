@@ -54,6 +54,17 @@ a local virtual environment needs a user override with its absolute ExecStart.
 Only then install/enable the reviewed user unit for the graphical session.
 Installing the application or plugin alone does not start the agent.
 
+For an installed agent package, after selecting **Application** or **Omarchy
+panel** in Device and desktop:
+
+```sh
+systemctl --user enable --now minifuse-desktop-agent.service
+```
+
+Disable background activation with `systemctl --user disable --now minifuse-desktop-agent.service`. Selecting **Disabled** also prevents launches.
+On a systemd user session, application launches have their own transient unit,
+so stopping the agent leaves the open mixer running.
+
 The agent uses fixed argument vectors for `minifuse-control`, `omarchy-shell`
 and `notify-send`. Ensure the selected executable is available in its session
 PATH. It cannot run an arbitrary command from preferences or event data.

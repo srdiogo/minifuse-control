@@ -32,6 +32,14 @@ vector. The application exposes a single-instance activation endpoint. If it
 already exists, request presentation of that window; do not spawn another
 mixer. A launch/present request never restores a preset or writes a device.
 
+When a systemd user session and `systemd-run` are available, the agent starts
+the fixed application executable in a separate transient user unit. Restarting
+or stopping the agent therefore does not terminate an open mixer. Without a
+session manager it uses the direct detached launcher. A failed managed launch
+is reported, not retried through a second launcher. The activation socket owns
+its connection deadlines, so completed connections leave no callbacks targeting
+deleted sockets.
+
 Wayland/compositor focus policy may deny foregrounding without a valid user
 activation context. Respect that decision, keep one instance and use a
 notification/focus affordance where appropriate. Do not promise forced focus
