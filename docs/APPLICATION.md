@@ -92,7 +92,7 @@ Do not manufacture success because a button changed color.
 
 MF4 uses its mapped three-mix control subset. Experimental MF1/MF2/OTG support
 uses a separate native loopback layout, firmware/readback gates and explicit
-backend opt-in; it must never expose the MF4 mixer. See [model layouts](MODELS.md).
+compatible firmware, confirmed state and matching backend capabilities. See [model layouts](MODELS.md).
 Hide or explain unavailable functions rather than sending guessed selectors.
 
 MF4 INST1, INST2 and shared +48 V indicators use authoritative `state.inputs`
