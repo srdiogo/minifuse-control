@@ -8,7 +8,7 @@ arch=('any')
 url='https://github.com/srdiogo/minifuse-control'
 license=('MIT')
 makedepends=('python-build' 'python-installer' 'python-setuptools>=77' 'python-wheel')
-checkdepends=('pyside6>=6.11.2' 'desktop-file-utils' 'qt6-declarative')
+checkdepends=('git' 'pyside6>=6.11.2' 'desktop-file-utils' 'qt6-declarative')
 _commit=24815101f689b909f5228074395ecb5dd671450b
 source=("$pkgbase-$_commit.tar.gz::$url/archive/$_commit.tar.gz")
 sha256sums=('4f040e1be5c94197e5bd436c7b30dd1d74be778376af426a8e114c8804fdb59a')

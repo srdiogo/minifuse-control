@@ -67,6 +67,15 @@ class Controller(QObject):
             and not self._busy
             and not self._pending
             and self._device.get("capabilities", {}).get("mixer")
+            and ("profile" not in self._device or bool(self.modelProfile))
+            and (
+                self.panelLayout != "loopback_mixer"
+                or (
+                    self.firmwareInfo.get("loopback_compatible") is True
+                    and self._state.get("state", {}).get("firmware")
+                    == self.firmwareInfo
+                )
+            )
         )
 
     @Property("QVariantMap", notify=changed)
@@ -77,7 +86,108 @@ class Controller(QObject):
 
     @Property(bool, notify=changed)
     def canWriteInputs(self):
-        return bool(self.canWrite and self.capabilities.get("input_switches"))
+        return bool(
+            self._online
+            and self._device
+            and self._state
+            and not self._busy
+            and not self._pending
+            and self.capabilities.get("input_switches")
+            and self.capabilities.get("switch_readback")
+            and ("profile" not in self._device or bool(self.modelProfile))
+            and self.modelProfile.get("device_mode", "control") == "control"
+        )
+
+    @Property("QVariantMap", notify=changed)
+    def modelProfile(self):
+        profile = (self._device or {}).get("profile", {})
+        if (
+            not isinstance(profile, dict)
+            or type(profile.get("schema_version")) is not int
+            or profile["schema_version"] != 1
+        ):
+            return {}
+        if profile.get("id") not in ("mf1", "mf2", "mf2_otg", "mf4"):
+            return {}
+        mode = profile.get("device_mode")
+        if mode not in ("control", "initialization"):
+            return {}
+        expected = (
+            "initialization"
+            if mode == "initialization"
+            else "mf4_mixer"
+            if profile["id"] == "mf4"
+            else "inputs_and_monitoring"
+        )
+        valid = profile.get("layout") == expected or (
+            mode == "control"
+            and profile["id"] != "mf4"
+            and profile.get("layout") == "loopback_mixer"
+        )
+        return profile if valid else {}
+
+    @Property("QVariantMap", notify=changed)
+    def firmwareInfo(self):
+        value = (self._device or {}).get("firmware", {})
+        return value if isinstance(value, dict) else {}
+
+    @Property("QVariantMap", notify=changed)
+    def loopbackRouting(self):
+        return self._state.get("state", {}).get("loopback", {})
+
+    @Property("QVariantMap", notify=changed)
+    def otgRouting(self):
+        return self._state.get("state", {}).get("otg") or {}
+
+    @Property(str, notify=changed)
+    def modelName(self):
+        return (self._device or {}).get("model", "MiniFuse")
+
+    @Property(str, notify=changed)
+    def panelLayout(self):
+        return self.modelProfile.get(
+            "layout",
+            "unsupported" if "profile" in (self._device or {}) else "mf4_mixer",
+        )
+
+    @Property("QVariantList", notify=changed)
+    def inputControls(self):
+        if self.modelProfile:
+            controls = self.modelProfile.get("input_controls", [])
+            return [
+                c
+                for c in controls
+                if isinstance(c, dict)
+                and c.get("target")
+                in ("inst1", "inst2", "phantom_power", "direct_monitor")
+            ][:4]
+        if "profile" in (self._device or {}):
+            return []
+        return [
+            {
+                "target": "inst1",
+                "label": "INST 1",
+                "description": "Instrument mode for input 1",
+            },
+            {
+                "target": "inst2",
+                "label": "INST 2",
+                "description": "Instrument mode for input 2",
+            },
+            {
+                "target": "phantom_power",
+                "label": "+48 V · 1–2",
+                "description": "Shared phantom power for inputs 1 and 2",
+            },
+        ]
+
+    def _select_device(self):
+        candidates = [
+            d
+            for d in self._devices
+            if d.get("profile") or d.get("capabilities", {}).get("mixer")
+        ]
+        return candidates[0] if len(candidates) == 1 else None
 
     @Property(bool, notify=changed)
     def liveActive(self):
@@ -113,7 +223,9 @@ class Controller(QObject):
 
     @Property("QVariantMap", notify=changed)
     def capabilities(self):
-        return self._state.get("capabilities", {})
+        return self._state.get(
+            "capabilities", (self._device or {}).get("capabilities", {})
+        )
 
     @Property("QVariantMap", notify=metersChanged)
     def meters(self):
@@ -141,8 +253,43 @@ class Controller(QObject):
                 and -200 <= value <= 0
             )
 
+        if data.get("meter_layout") == "minifuse-basic-c2-v1":
+            inputs = data.get("inputs_dbfs")
+            loopback = data.get("loopback_dbfs")
+            otg = data.get("otg_dbfs")
+            count = 1 if self.modelProfile.get("id") == "mf1" else 2
+
+            def pair(value):
+                return (
+                    isinstance(value, list)
+                    and len(value) == 2
+                    and all(valid(v) for v in value)
+                )
+
+            accepted = (
+                self.panelLayout == "loopback_mixer"
+                and data.get("available") is True
+                and self.capabilities.get("signal_meters") is True
+                and isinstance(inputs, list)
+                and len(inputs) == count
+                and all(valid(v) for v in inputs)
+                and pair(loopback)
+                and (
+                    pair(otg)
+                    if self.modelProfile.get("id") == "mf2_otg"
+                    else otg is None
+                )
+            )
+            if not accepted:
+                self._clear_meters()
+                return
+            self._meters = data
+            self._meter_timeout.start()
+            self.metersChanged.emit()
+            return
         if (
-            data.get("available") is not True
+            self.panelLayout != "mf4_mixer"
+            or data.get("available") is not True
             or not self.capabilities.get("signal_meters")
             or not isinstance(sources, list)
             or len(sources) != 10
@@ -205,6 +352,14 @@ class Controller(QObject):
                 }
             )
 
+        for group in ("loopback", "otg"):
+            for field, after in (state.get(group) or {}).items():
+                add(
+                    group + " · " + field,
+                    field,
+                    after,
+                    (current.get(group) or {}).get(field),
+                )
         for mix in state.get("mixes", []):
             previous = next(
                 (m for m in current.get("mixes", []) if m["mix"] == mix["mix"]), {}
@@ -225,14 +380,21 @@ class Controller(QObject):
                     ),
                     {},
                 )
-                for field, label in (
+                fields = [
                     ("derived_level_db", "Level dB"),
                     ("derived_pan", "Pan"),
                     ("mute", "Mute"),
                     ("solo", "Solo"),
                     ("mono_included", "Mono source included"),
                     ("stereo_pair_included", "Stereo pair included"),
-                ):
+                ]
+                if state.get("layout") == "minifuse-basic-b2-v1":
+                    fields += [
+                        ("db_left", "Left dB"),
+                        ("db_right", "Right dB"),
+                        ("mute_mixed", "Mixed mute"),
+                    ]
+                for field, label in fields:
                     add(
                         f"{mix['mix']} · {channel['channel']} · {label}",
                         field,
@@ -293,15 +455,7 @@ class Controller(QObject):
             return
         self.client.sequence = result["seq"]
         self._devices = result["devices"]
-        self._device = next(
-            (
-                d
-                for d in self._devices
-                if d.get("connection") == "ready"
-                and d.get("capabilities", {}).get("mixer")
-            ),
-            None,
-        )
+        self._device = self._select_device()
         self._state = next(
             (
                 s
@@ -317,9 +471,9 @@ class Controller(QObject):
 
     def _availability(self):
         if self._state:
-            self._status = "MiniFuse 4 · confirmed device state"
+            self._status = self.modelName + " · confirmed device state"
         elif self._devices:
-            self._status = "Device controls unavailable"
+            self._status = self.modelName + " · controls unavailable"
             self._message = next(
                 (
                     d.get("error", {}).get("message", "Unsupported device")
@@ -409,16 +563,11 @@ class Controller(QObject):
             self._failure(error)
             return
         self._devices = result["devices"]
-        ready = [
-            d
-            for d in self._devices
-            if d.get("connection") == "ready" and d.get("capabilities", {}).get("mixer")
-        ]
-        if len(ready) != 1:
-            self._state, self._device = {}, None
+        self._device = self._select_device()
+        if not self._device or self._device.get("connection") != "ready":
+            self._state = {}
             self._availability()
             return
-        self._device = ready[0]
         self.client.request(
             "get_state",
             {key: self._device[key] for key in ("device_id", "generation")},
@@ -513,9 +662,10 @@ class Controller(QObject):
 
     @Slot("QVariantMap")
     def change(self, change):
-        if not self.canWrite:
-            return
-        if change.get("kind") == "input_switch" and not self.canWriteInputs:
+        if change.get("kind") == "input_switch":
+            if not self.canWriteInputs:
+                return
+        elif not self.canWrite:
             return
         self._busy = True
         self._message = "Preparing verified change…"
@@ -531,7 +681,7 @@ class Controller(QObject):
     def setInputSwitch(self, target, enabled):
         if (
             self.canWriteInputs
-            and target in ("inst1", "inst2", "phantom_power")
+            and target in {c["target"] for c in self.inputControls}
             and isinstance(self.inputs.get(target), bool)
             and self.inputs[target] != enabled
         ):

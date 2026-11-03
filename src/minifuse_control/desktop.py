@@ -6,6 +6,7 @@ import fcntl
 import os
 from pathlib import Path
 import socket
+import shutil
 import struct
 import subprocess
 import sys
@@ -54,8 +55,38 @@ class ActivationPolicy:
 
 def launch_target(target):
     if target == "application":
+        runtime = Path(os.environ.get("XDG_RUNTIME_DIR", ""))
+        manager = shutil.which("systemd-run")
+        if (
+            runtime.is_absolute()
+            and (runtime / "systemd/private").is_socket()
+            and manager
+        ):
+            executable = shutil.which("minifuse-control")
+            if not executable:
+                raise OSError("Install MiniFuse Control before selecting this target")
+            # A new POSIX session alone does not escape the agent's service
+            # cgroup. Give the GUI its own unit so agent restarts cannot kill it.
+            subprocess.run(
+                [
+                    manager,
+                    "--user",
+                    "--collect",
+                    "--quiet",
+                    "--service-type=exec",
+                    "--description=MiniFuse Control",
+                    "--",
+                    str(Path(executable).resolve()),
+                    "--toggle",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=3,
+                check=True,
+            )
+            return
         process = subprocess.Popen(
-            ["minifuse-control"],
+            ["minifuse-control", "--toggle"],
             start_new_session=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

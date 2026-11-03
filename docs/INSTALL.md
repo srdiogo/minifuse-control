@@ -45,13 +45,25 @@ proprietary icon is required.
 
 ## Optional desktop activation
 
-The agent default is disabled; current backend button capability is unavailable.
-An activation preference does not enable unsupported events. Once the backend
-evidence gate passes, a user can select one target and separately opt into
-session startup. The user-unit template uses `/usr/bin/minifuse-desktop-agent`;
+The agent default is disabled. MF4 short-press events require a backend with
+validated USB firmware descriptor 1.0.1 support and confirmed device state.
+An activation preference does not enable unsupported events. Select one target
+in Device and desktop, then separately opt into session startup. The user-unit
+template uses `/usr/bin/minifuse-desktop-agent`;
 a local virtual environment needs a user override with its absolute ExecStart.
 Only then install/enable the reviewed user unit for the graphical session.
 Installing the application or plugin alone does not start the agent.
+
+For an installed agent package, after selecting **Application** or **Omarchy
+panel** in Device and desktop:
+
+```sh
+systemctl --user enable --now minifuse-desktop-agent.service
+```
+
+Disable background activation with `systemctl --user disable --now minifuse-desktop-agent.service`. Selecting **Disabled** also prevents launches.
+On a systemd user session, application launches have their own transient unit,
+so stopping the agent leaves the open mixer running.
 
 The agent uses fixed argument vectors for `minifuse-control`, `omarchy-shell`
 and `notify-send`. Ensure the selected executable is available in its session
@@ -95,7 +107,7 @@ and archive checksum. The packages have separate ownership:
 - `minifuse-desktop-agent`: standard-library activation policy and optional
   user unit; depends on the common package and service, without Qt.
 
-The agent package is optional and current logo-button support remains disabled.
+The agent package is optional. Logo-button support is limited to the validated MF4 device/firmware; other models remain disabled.
 Installing either package does not enable a unit, restore a preset or modify
 Omarchy. The module and active-session device permissions remain separate
 administrator-managed prerequisites from the MiniFuse Backend workspace. The

@@ -58,21 +58,38 @@ supports Arch Linux x86_64; a Python wheel alone does not install the required
 driver or service. See the
 [distribution roadmap](https://github.com/srdiogo/minifuse-backend/blob/main/docs/DISTRIBUTION.md).
 
+## Model-support testing
+
+This test revision selects the correct input and native loopback layout for
+MiniFuse 1, MiniFuse 2 and MiniFuse 2 OTG. The backend checks the USB firmware
+descriptor, exact state and matching driver capabilities before enabling native
+loopback. Candidate families are MF1/MF2 1.5.x and OTG 1.0.x; unknown or
+unreviewed families stay unavailable. Explicit opt-in is required, and physical
+acceptance is still pending for every new model. MF4 retains its existing
+independent mixer. The installer preview linked above predates these additions.
+
+We are looking for owners of MF1, MF2 and MF2 OTG to help with LED checks,
+readbacks and minimal Windows USB captures. Follow the backend's
+[hardware acceptance guide](https://github.com/srdiogo/minifuse-backend/blob/feature/model-controls/docs/models/TESTING.md).
+Static analysis and synthetic frontend fixtures are not physical validation.
+See [model layouts and boundaries](docs/MODELS.md) for controls and limitations.
+
 ## Compatibility
 
 | Area | Current status |
 |---|---|
 | MiniFuse 4 | Bounded hardware validation of mixer, routes, input controls and meters |
-| MiniFuse 1 / 2 | Full application controls unavailable |
+| MiniFuse 1 / 2 / 2 OTG | Experimental native loopback mixer, routing, meters and host presets; model/firmware gates and hardware acceptance pending |
 | Desktop | Standalone Qt Quick application; Omarchy is optional |
 | Application runtime | Python 3.12–3.14; source GUI extra pins PySide6 6.11.2 |
 | Native packages | Arch Linux x86_64; GUI checked with Qt 6.11.2 and 6.12.0 |
 
-**Development preview.** Physical-logo activation is unavailable. Effects,
+**Development preview.** Optional MF4 short-press logo activation requires a compatible backend, validated USB firmware descriptor 1.0.1 and the desktop agent. Effects,
 firmware changes and device-storage writes are outside scope. Unsupported
 controls remain unavailable rather than using a guessed model layout.
-Meter peaks are measured before destination routing and may differ from the
-physical outputs when USB direct routing is selected.
+MF4 meter peaks are measured before destination routing and may differ from the
+physical outputs when USB direct routing is selected. New-model meters follow
+the native input/loopback layout and still need physical channel/scale checks.
 
 ## First launch
 
@@ -91,7 +108,7 @@ reads fresh state; it does not restore a preset automatically.
 - [Support and troubleshooting](SUPPORT.md)
 - [Development and tests](docs/DEVELOPMENT.md)
 - [Application architecture](docs/APPLICATION.md) and [validation status](docs/IMPLEMENTATION.md)
-- [Optional desktop agent](docs/DESKTOP.md); physical-logo events remain unavailable
+- [Optional desktop agent](docs/DESKTOP.md) for validated MF4 short presses
 - [Changelog](CHANGELOG.md) and [contributing](CONTRIBUTING.md)
 - [MiniFuse Backend](https://github.com/srdiogo/minifuse-backend) and [MiniFuse for Omarchy](https://github.com/srdiogo/omarchy-minifuse)
 

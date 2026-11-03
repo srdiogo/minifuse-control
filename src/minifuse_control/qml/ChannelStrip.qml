@@ -12,7 +12,7 @@ StripFrame {
     property real panPreview: 0.5
     property string editRevision: ""
     readonly property bool included: channel.mono_included || channel.stereo_pair_included
-    readonly property string sourceName: channel.channel.replace("analog", "Analog ").replace("usb", "USB ")
+    readonly property string sourceName: ({usb12: "USB 1–2", usb34: "USB 3–4", usb56: "USB 5–6"})[channel.channel] || channel.channel.replace("analog", "Analog ").replace("usb", "USB ")
     objectName: "sourceStrip-" + channel.channel
     enabled: controller.online
     property string levelKey: "channel_level:" + mixName + ":" + channel.channel
@@ -63,7 +63,7 @@ StripFrame {
         }
         Label {
             visible: !root.compact
-            text: root.panText(root.panDirty ? root.panPreview : root.channel.derived_pan)
+            text: root.channel.pan_available === false ? (root.channel.level_mixed ? qsTr("Stereo · mixed") : qsTr("Stereo")) : root.panText(root.panDirty ? root.panPreview : root.channel.derived_pan)
             Layout.fillWidth: true
             Layout.preferredHeight: 16
             horizontalAlignment: Text.AlignHCenter
@@ -71,41 +71,45 @@ StripFrame {
             opacity: 0.6
             elide: Text.ElideRight
         }
-        Slider {
-            id: pan
-            objectName: "sourcePan-" + root.channel.channel
+        Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 24
-            enabled: root.controller.canWrite || (root.controller.liveActive && root.controller.activeControlKey === root.panKey)
-            from: 0; to: 1; stepSize: 0.01
-            leftPadding: 6; rightPadding: 6
-            value: root.panDirty ? root.panPreview : (root.channel.derived_pan === null ? 0.5 : root.channel.derived_pan)
-            Accessible.name: root.sourceName + " pan"
-            ToolTip.visible: hovered
-            ToolTip.text: root.panText(root.panDirty ? root.panPreview : root.channel.derived_pan)
-            onMoved: { if (!root.panDirty) root.editRevision = root.controller.editRevision; root.panPreview = value; root.panDirty = true; root.adjustPan(!pressed) }
-            onPressedChanged: { if (!pressed && root.panDirty) root.adjustPan(true) }
-            Keys.onEscapePressed: { root.controller.cancelControl(); root.panDirty = false; root.panConflict = false }
-            background: Rectangle {
-                x: pan.leftPadding; y: (pan.height - height) / 2
-                width: pan.availableWidth; height: 2
-                color: Qt.alpha(pan.palette.windowText, 0.22)
-                Rectangle { anchors.centerIn: parent; width: 1; height: 6; color: pan.palette.mid }
-            }
-            handle: Rectangle {
-                x: pan.leftPadding + pan.visualPosition * (pan.availableWidth - width)
-                y: (pan.height - height) / 2
-                implicitWidth: 8; implicitHeight: 12; radius: 2
-                color: pan.pressed ? pan.palette.highlight : pan.palette.button
-                border.color: pan.visualFocus || pan.pressed ? pan.palette.highlight : Qt.alpha(pan.palette.windowText, 0.55)
+            Slider {
+                id: pan
+                objectName: "sourcePan-" + root.channel.channel
+                visible: root.channel.pan_available !== false
+                anchors.fill: parent
+                enabled: root.controller.canWrite || (root.controller.liveActive && root.controller.activeControlKey === root.panKey)
+                from: 0; to: 1; stepSize: 0.01
+                leftPadding: 6; rightPadding: 6
+                value: root.panDirty ? root.panPreview : (root.channel.derived_pan === null ? 0.5 : root.channel.derived_pan)
+                Accessible.name: root.sourceName + " pan"
+                ToolTip.visible: hovered
+                ToolTip.text: root.channel.pan_available === false ? (root.channel.level_mixed ? qsTr("Stereo · mixed") : qsTr("Stereo")) : root.panText(root.panDirty ? root.panPreview : root.channel.derived_pan)
+                onMoved: { if (!root.panDirty) root.editRevision = root.controller.editRevision; root.panPreview = value; root.panDirty = true; root.adjustPan(!pressed) }
+                onPressedChanged: { if (!pressed && root.panDirty) root.adjustPan(true) }
+                Keys.onEscapePressed: { root.controller.cancelControl(); root.panDirty = false; root.panConflict = false }
+                background: Rectangle {
+                    x: pan.leftPadding; y: (pan.height - height) / 2
+                    width: pan.availableWidth; height: 2
+                    color: Qt.alpha(pan.palette.windowText, 0.22)
+                    Rectangle { anchors.centerIn: parent; width: 1; height: 6; color: pan.palette.mid }
+                }
+                handle: Rectangle {
+                    x: pan.leftPadding + pan.visualPosition * (pan.availableWidth - width)
+                    y: (pan.height - height) / 2
+                    implicitWidth: 8; implicitHeight: 12; radius: 2
+                    color: pan.pressed ? pan.palette.highlight : pan.palette.button
+                    border.color: pan.visualFocus || pan.pressed ? pan.palette.highlight : Qt.alpha(pan.palette.windowText, 0.55)
+                }
             }
         }
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredHeight: 28
             spacing: 6
-            StateButton { objectName: "sourceMute-" + root.channel.channel; enabled: root.controller.canWrite; text: "M"; active: root.channel.mute; description: root.sourceName + " mute"; onClicked: root.send({mute: !root.channel.mute}) }
-            StateButton { objectName: "sourceSolo-" + root.channel.channel; enabled: root.controller.canWrite; text: "S"; active: root.channel.solo; description: root.sourceName + " solo"; onClicked: root.send({solo: !root.channel.solo}) }
+            StateButton { objectName: "sourceMute-" + root.channel.channel; enabled: root.controller.canWrite; text: root.channel.mute_mixed ? "M·" : "M"; active: root.channel.mute; description: root.sourceName + " mute"; onClicked: root.send({mute: !root.channel.mute}) }
+            StateButton { visible: root.controller.panelLayout !== "loopback_mixer"; objectName: "sourceSolo-" + root.channel.channel; enabled: root.controller.canWrite; text: "S"; active: root.channel.solo; description: root.sourceName + " solo"; onClicked: root.send({solo: !root.channel.solo}) }
         }
         Item { Layout.fillHeight: true }
     }
@@ -119,8 +123,8 @@ StripFrame {
         confirmed: root.channel.derived_level_db
         revision: root.controller.editRevision
         meterName: root.sourceName
-        metersAvailable: root.controller.meters.available === true
-        meterValues: root.controller.meters.sources_dbfs ? [root.controller.meters.sources_dbfs[["analog1", "analog2", "analog3", "analog4", "usb1", "usb2", "usb3", "usb4", "usb5", "usb6"].indexOf(root.channel.channel)]] : []
+        metersAvailable: root.controller.meters.available === true && (root.controller.panelLayout !== "loopback_mixer" || root.channel.channel.startsWith("analog"))
+        meterValues: root.controller.panelLayout === "loopback_mixer" ? (root.channel.channel.startsWith("analog") && root.controller.meters.inputs_dbfs ? [root.controller.meters.inputs_dbfs[Number(root.channel.channel.slice(6)) - 1]] : []) : root.controller.meters.sources_dbfs ? [root.controller.meters.sources_dbfs[["analog1", "analog2", "analog3", "analog4", "usb1", "usb2", "usb3", "usb4", "usb5", "usb6"].indexOf(root.channel.channel)]] : []
         onAdjusted: (value, finish) => root.controller.adjust({kind: "channel_level", mix: root.mixName, source: root.channel.channel}, value, finish)
         onCancelled: root.controller.cancelControl()
         onCommitted: value => root.send({level_db: value})

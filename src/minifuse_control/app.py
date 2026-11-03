@@ -16,7 +16,10 @@ def main():
         description="MiniFuse mixer, routing and host presets"
     )
     parser.add_argument("--version", action="version", version=__version__)
-    parser.parse_args()
+    parser.add_argument(
+        "--toggle", action="store_true", help="Close the focused mixer or present it"
+    )
+    args = parser.parse_args()
     try:
         from PySide6.QtCore import QTimer, QUrl, QProcess
         from PySide6.QtGui import QGuiApplication, QIcon
@@ -49,7 +52,7 @@ def main():
             with socket.socket(socket.AF_UNIX) as peer:
                 peer.settimeout(1)
                 peer.connect(str(endpoint))
-                peer.sendall(b"activate\n")
+                peer.sendall(b"toggle\n" if args.toggle else b"activate\n")
             return 0
         except OSError:
             parser.exit(
@@ -122,9 +125,13 @@ def main():
 
             def read(peer=peer, received=received):
                 received.extend(bytes(peer.readAll()))
-                if bytes(received) == b"activate\n":
-                    activate()
+                if received in (b"activate\n", b"toggle\n"):
+                    toggle = received == b"toggle\n"
                     peer.disconnectFromServer()
+                    if toggle and window.isVisible() and window.isActive():
+                        window.close()
+                    else:
+                        activate()
                 elif len(received) >= 32 or b"\n" in received:
                     peer.abort()
 
@@ -132,7 +139,12 @@ def main():
             peer.disconnected.connect(
                 lambda peer=peer: (peers.remove(peer), peer.deleteLater())
             )
-            QTimer.singleShot(1000, peer.disconnectFromServer)
+            # Destroy the timeout with its socket; a completed activation may
+            # delete the peer before the timeout expires.
+            timeout = QTimer(peer)
+            timeout.setSingleShot(True)
+            timeout.timeout.connect(lambda peer=peer: peer.disconnectFromServer())
+            timeout.start(1000)
 
     server.newConnection.connect(connected)
     app.aboutToQuit.connect(client.close)
