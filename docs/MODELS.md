@@ -6,12 +6,12 @@ counts. Ambiguous inventories leave controls disabled. Unknown metadata never
 grants write access; older backends retain the existing MF4 presentation.
 
 MF1: INST1, +48 V, direct monitor. MF2 and MF2 OTG: INST1, INST2, shared +48 V,
-direct mono. These basic controls require an explicitly enabled test backend,
+direct mono. These basic controls require compatible firmware,
 confirmed model-specific state and advertised `input_switches` capability.
 They use the existing typed plan/apply workflow and wait for readback.
 Hardware validation remains pending separately for all three models.
 
-With `MF_SERVICE_EXPERIMENTAL_LOOPBACK=1`, compatible confirmed firmware and
+With backend 0.2.1, compatible confirmed firmware and
 matching driver capabilities, the runtime profile is `loopback_mixer`. Firmware
 families are MF1/MF2 1.5.x and OTG 1.0.x; unknown, old and unreviewed families
 remain blocked. The application also requires matching inventory/readback
