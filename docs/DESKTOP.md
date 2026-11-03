@@ -29,8 +29,9 @@ by the service, snapshot or preference.
 
 Launch through the application's owned desktop identity or a fixed argument
 vector. The application exposes a single-instance activation endpoint. If it
-already exists, request presentation of that window; do not spawn another
-mixer. A launch/present request never restores a preset or writes a device.
+already exists, a short press closes the visible mixer when it has focus.
+If it is in the background, the press requests presentation of the same window.
+A normal application launch continues to present the existing window.
 
 When a systemd user session and `systemd-run` are available, the agent starts
 the fixed application executable in a separate transient user unit. Restarting

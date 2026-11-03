@@ -77,6 +77,7 @@ def launch_target(target):
                     "--description=MiniFuse Control",
                     "--",
                     str(Path(executable).resolve()),
+                    "--toggle",
                 ],
                 capture_output=True,
                 text=True,
@@ -85,7 +86,7 @@ def launch_target(target):
             )
             return
         process = subprocess.Popen(
-            ["minifuse-control"],
+            ["minifuse-control", "--toggle"],
             start_new_session=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

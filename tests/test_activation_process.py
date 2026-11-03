@@ -59,6 +59,14 @@ class ActivationProcessTests(unittest.TestCase):
                         self.assertEqual(idle.recv(1), b"")
                     time.sleep(0.2)
                     self.assertIsNone(process.poll())
+                    toggled = subprocess.run(
+                        [*command, "--toggle"],
+                        env=environment,
+                        capture_output=True,
+                        timeout=5,
+                    )
+                    self.assertEqual(toggled.returncode, 0, toggled.stderr)
+                    self.assertEqual(process.wait(timeout=5), 0)
                     log.flush()
                     log.seek(0)
                     diagnostics = log.read()
@@ -66,7 +74,8 @@ class ActivationProcessTests(unittest.TestCase):
                     self.assertNotIn("Internal C++ object", diagnostics)
                     self.assertNotIn("Traceback (most recent call last)", diagnostics)
                 finally:
-                    process.terminate()
+                    if process.poll() is None:
+                        process.terminate()
                     try:
                         process.wait(timeout=5)
                     except subprocess.TimeoutExpired:

@@ -165,7 +165,8 @@ class DesktopLaunchTests(unittest.TestCase):
                 self.assertIn("--user", command)
                 self.assertIn("--service-type=exec", command)
                 self.assertEqual(
-                    command[-2:], ["--", "/opt/minifuse/bin/minifuse-control"]
+                    command[-3:],
+                    ["--", "/opt/minifuse/bin/minifuse-control", "--toggle"],
                 )
                 self.assertTrue(launch.call_args.kwargs["check"])
 
@@ -180,7 +181,7 @@ class DesktopLaunchTests(unittest.TestCase):
         ):
             desktop.launch_target("application")
         managed.assert_not_called()
-        self.assertEqual(launch.call_args.args[0], ["minifuse-control"])
+        self.assertEqual(launch.call_args.args[0], ["minifuse-control", "--toggle"])
         self.assertTrue(launch.call_args.kwargs["start_new_session"])
 
     def test_failed_launch_is_reported_once_without_retrying_a_duplicate_event(self):
