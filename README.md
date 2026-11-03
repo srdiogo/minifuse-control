@@ -31,32 +31,13 @@ for hardware control. Omarchy is optional; its
 
 ## Install
 
-**Arch Linux x86_64:** download the archive and checksum from the
-[complete installation preview](https://github.com/srdiogo/minifuse-backend/releases/tag/installer-preview-2026-10-29).
-Verify and extract it, then select the application profile:
+Download the complete MiniFuse Control package for Ubuntu 26.04 LTS, Fedora 45
+or Arch Linux (x86-64). Every download includes the desktop mixer, backend and
+driver. The Omarchy panel has its own repository and release.
 
-```sh
-sha256sum -c minifuse-linux-installer-2026-10-29.tar.gz.sha256
-tar -xzf minifuse-linux-installer-2026-10-29.tar.gz
-cd minifuse-linux-installer-2026-10-29
-./install.sh --profile gui
-```
-
-Run as your normal graphical-session user. This installs the driver, service
-and application without the Omarchy panel. Setup displays its plan before
-confirmation, prepares matching kernel headers and configures boot/login
-startup. The published GUI packages require Python 3.14.
-
-On Omarchy, use `./install.sh --profile full` to include the panel and floating
-application-window setup. For existing installations, custom kernels, startup
-options, updates or removal, read the
-[installer guide](https://github.com/srdiogo/minifuse-backend/blob/main/distribution/INSTALLER.md)
-and [application installation guide](docs/INSTALL.md).
-
-Ubuntu, Debian and Fedora packages are planned. The current complete installer
-supports Arch Linux x86_64; a Python wheel alone does not install the required
-driver or service. See the
-[distribution roadmap](https://github.com/srdiogo/minifuse-backend/blob/main/docs/DISTRIBUTION.md).
+[Downloads](https://github.com/srdiogo/minifuse-control/releases) ·
+[Package archive](https://github.com/srdiogo/minifuse-control/tree/packages) ·
+[Installation instructions](docs/NATIVE_PACKAGES.md)
 
 ## Model-support testing
 
@@ -66,7 +47,7 @@ descriptor, exact state and matching driver capabilities before enabling native
 loopback. Candidate families are MF1/MF2 1.5.x and OTG 1.0.x; unknown or
 unreviewed families stay unavailable. Backend 0.2.1 enables compatible controls automatically. Physical
 acceptance is still pending for every new model. MF4 retains its existing
-independent mixer. The installer preview linked above predates these additions.
+independent mixer.
 
 We are looking for owners of MF1, MF2 and MF2 OTG to help with LED checks,
 readbacks and minimal Windows USB captures. Follow the backend's

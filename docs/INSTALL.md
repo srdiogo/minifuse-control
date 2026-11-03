@@ -1,10 +1,8 @@
 # Installation and removal
 
-For the complete Arch Linux installation, start at
-[Install in the project README](../README.md#install). It includes the backend.
-The sections below cover separate backend/application setup and removal.
-Other distribution packages are tracked in the
-[distribution roadmap](https://github.com/srdiogo/minifuse-backend/blob/main/docs/DISTRIBUTION.md).
+For the complete installer on Ubuntu, Fedora or Arch Linux, see the
+[native packages guide](NATIVE_PACKAGES.md). Those downloads include the backend
+and driver. The sections below cover installing the application separately.
 
 ## Backend prerequisite
 
